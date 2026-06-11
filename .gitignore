@@ -1,0 +1,4 @@
+# Employer-specific context never gets committed to this repo
+company.md
+*.local.md
+.env
