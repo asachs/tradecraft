@@ -4,7 +4,7 @@ project: claude-work-scaffold
 effort: E3
 effort_source: classifier
 phase: complete
-progress: 38/38
+progress: 41/41
 mode: interactive
 started: 2026-06-12T01:05:00Z
 updated: 2026-06-12T01:05:00Z
@@ -95,6 +95,12 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - [x] ISC-37: README.md documents the four tools, WORK_DIR config, and the membrane rule (draft → human review → manual send)
 - [x] ISC-38: Repo committed and pushed with tools, tests, fixtures; `bun test` output captured in Verification
 
+### Tone iteration (2026-06-12, Andre review)
+
+- [x] ISC-39: WeeklyReport renders each repo+branch theme's commits as a nested markdown list (no `;`-joined run-ons)
+- [x] ISC-40: Commit ids render as clickable `[sha](base/commit/sha)` links when `WORK_DIR/repos.json` maps the repo; bare text otherwise (graceful degrade)
+- [x] ISC-41: WeeklyReport and MondayPlan headings lead with the ISO week number (`W23`) before the date range
+
 ## Test Strategy
 
 | isc | type | check | threshold | tool |
@@ -129,6 +135,7 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - 2026-06-12: Project ISA placed at repo root as system of record; the Work OS task ISA (MEMORY/WORK/20260612-001500) references this build via ISC-23..29 but the engine's own done-condition lives here with the code.
 - 2026-06-12: Deterministic tools, no LLM inside — prose polish belongs to the Claude session wrapping the tool; the engine must be testable without inference and runnable on a bare corp VM.
 - 2026-06-12: Injectable `now` in all date logic — Europe/Dublin week boundaries and "Monday yesterday=Friday" logic are untestable otherwise.
+- 2026-06-12: Tone review feedback (Andre): commit ids must be clickable, commit lists must be real lists, week numbers before date ranges. Link base comes from optional `WORK_DIR/repos.json` (repo basename → web URL) — keeps tools network-free and employer-agnostic; missing/unmapped repos degrade to bare ids. Fixture shas corrected to valid hex (fake `e4f5g6h`-style strings defeated the hex sha matcher — the matcher is right, the fixture was wrong).
 - 2026-06-12: Implementation by Forge (GPT-5.4) against this ISA as spec; primary verified independently (re-ran bun test, ran all four tools, ran anti-sweeps). Show-your-math on E3 delegation floor (2nd delegation skipped): single cohesive repo spec — a second writer adds merge risk, not speed; research delegation already spent in the payments-primer run this session.
 
 ## Verification
@@ -142,4 +149,5 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - ISC-35: `rg -il "payroc|worldnet|sachs|asachs|/Users/" tools/ tests/ | wc -l` → 0.
 - ISC-36: `rg -l 'fetch\(|XMLHttpRequest|net\.|http\.' tools/ | wc -l` → 0.
 - ISC-37: README "Report engine" section added (Forge); content confirmed in diff review at commit.
+- ISC-39..41: `bun test` → "46 pass, 0 fail, 79 expect() calls" after tone iteration; WeeklyReport heading `# Weekly Report — W23 (2026-06-01 to 2026-06-07)`; Shipped renders nested bullets with `[\`a1b2c3d\`](https://github.com/example-org/infra-migration/commit/a1b2c3d) migrate OIDC provider config`; MondayPlan heading `W24 (week of 2026-06-08)`. isoWeekNumber tested across year boundaries (2027-01-01→W53, 2024-12-30→W1).
 - ISC-38: commit `7d0a36d` "Add report engine: four generators, shared lib, fixture week, 41 tests" — 17 files, 1300 insertions — pushed to origin/master (`c1ea314..7d0a36d`). `bun test`: "41 pass, 0 fail, 73 expect() calls".

@@ -44,6 +44,19 @@ describe("WeeklyReport", () => {
     expect(exitCode).toBe(0);
     expect(stdout).toContain("No captured activity");
   });
+
+  test("renders commits as nested list items, not semicolon-joined", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    expect(stdout).toMatch(/- \*\*infra-migration\*\* \(main\)\n  - /);
+    expect(stdout).not.toContain("; ");
+  });
+
+  test("linkifies commit ids when repos.json maps the repo", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    expect(stdout).toContain(
+      "[`a1b2c3d`](https://github.com/example-org/infra-migration/commit/a1b2c3d) migrate OIDC provider config"
+    );
+  });
 });
 
 describe("EodCrossing", () => {
