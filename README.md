@@ -44,12 +44,17 @@ Four deterministic CLI tools that turn passively-captured activity and a promise
 | `bun tools/EodCrossing.ts` | Membrane-safe end-of-day one-liners (done/decided/promised/learned/met/blocked) | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/MondayPlan.ts` | Week plan with promises, overdue items, initiatives, and outcome stubs | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
+| `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
 
 All tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
 
 ### EOD save-review loop
 
 Run `bun tools/EodCrossing.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
+
+### BRAG harvest loop
+
+Tag any EOD line with a trailing `[BRAG?]` while editing your saved EOD file. On Friday, run `bun tools/BragHarvest.ts` — each tagged line becomes a pre-filled stub in `$WORK_DIR/BRAG.md` (date, What in your own words, Evidence from ticket refs). Only the "Why it mattered" sentence is left for you to write — impact is always human-authored. Idempotent: re-runs skip entries already present.
 
 ### Configuration
 

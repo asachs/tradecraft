@@ -9,7 +9,11 @@ export interface EodLine {
   date: string;
   prefix: string;
   text: string;
+  /** True when the line carried a trailing [BRAG?] tag (stripped from text). */
+  brag: boolean;
 }
+
+const BRAG_TAG_RE = /\s*\[BRAG\?\]\s*$/;
 
 const VALID_PREFIXES = ["done", "decided", "promised", "learned", "met", "blocked"];
 const DATE_FILENAME_RE = /^(\d{4}-\d{2}-\d{2})\.md$/;
@@ -56,10 +60,16 @@ export function parseEodFiles(workDir: string): EodLine[] {
       const prefix = line.slice(0, colonIdx).trim().toLowerCase();
       if (!VALID_PREFIXES.includes(prefix)) continue;
 
-      const text = line.slice(colonIdx + 1).trim();
+      let text = line.slice(colonIdx + 1).trim();
       if (!text) continue;
 
-      results.push({ date, prefix, text });
+      const brag = BRAG_TAG_RE.test(text);
+      if (brag) {
+        text = text.replace(BRAG_TAG_RE, "").trim();
+        if (!text) continue;
+      }
+
+      results.push({ date, prefix, text, brag });
     }
   }
 
