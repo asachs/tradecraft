@@ -1,0 +1,12 @@
+{"ts":"2026-06-01T09:15:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s001","branch":"main","files_dirty":2,"last_commit":"a1b2c3d migrate OIDC provider config"}
+{"ts":"2026-06-01T14:30:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s002","branch":"main","files_dirty":0,"last_commit":"e4f5g6h add rollback script"}
+{"ts":"2026-06-02T10:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s003","branch":"feature/rate-limiting","files_dirty":3,"last_commit":"i7j8k9l implement token bucket rate limiter"}
+{"ts":"2026-06-02T16:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s004","branch":"fix/rollback-timeout","files_dirty":1,"last_commit":"m0n1o2p increase rollback timeout to 300s"}
+this is not valid json and should be skipped
+{"ts":"2026-06-03T09:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s005","branch":"feature/rate-limiting","files_dirty":0,"last_commit":"q3r4s5t add rate limiter unit tests"}
+{"ts":"2026-06-03T15:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s006","branch":"main","files_dirty":1,"last_commit":"u6v7w8x merge rate-limiting to main"}
+{"ts":"2026-06-04T11:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s007","branch":"main","files_dirty":0,"last_commit":"y9z0a1b staging deploy green"}
+{"ts":"2026-06-04T17:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s008","branch":"feature/auth-headers","files_dirty":2,"last_commit":"c2d3e4f add auth header forwarding"}
+{"ts":"2026-06-05T10:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s009","branch":"main","files_dirty":0,"last_commit":"g5h6i7j production cutover complete"}
+{"ts":"2026-06-05T16:30:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s010","branch":"feature/auth-headers","files_dirty":1,"last_commit":"k8l9m0n fix header case sensitivity"}
+{"ts":"2026-05-31T20:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s000","branch":"main","files_dirty":1,"last_commit":"pre0001 sunday prep work"}
