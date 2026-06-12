@@ -1,20 +1,37 @@
 import { describe, test, expect } from "bun:test";
 import { resolve } from "node:path";
+import { cpSync, existsSync, readFileSync, rmSync, mkdirSync } from "node:fs";
 
 const fixtureDir = resolve(import.meta.dir, "fixtures/work");
 const toolsDir = resolve(import.meta.dir, "../tools");
 
-function runTool(name: string, args: string[]): { stdout: string; exitCode: number } {
+function runTool(
+  name: string,
+  args: string[],
+  opts?: { workDir?: string }
+): { stdout: string; stderr: string; exitCode: number } {
   const result = Bun.spawnSync({
     cmd: ["bun", resolve(toolsDir, name), ...args],
-    env: { ...process.env, WORK_DIR: fixtureDir },
+    env: { ...process.env, WORK_DIR: opts?.workDir ?? fixtureDir },
     stdout: "pipe",
     stderr: "pipe",
   });
   return {
     stdout: result.stdout.toString(),
+    stderr: result.stderr.toString(),
     exitCode: result.exitCode,
   };
+}
+
+/** Create a temp copy of the fixture dir for tests that write. */
+function makeTempFixtureCopy(): string {
+  const tmp = resolve(import.meta.dir, `_tmp_fixture_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  cpSync(fixtureDir, tmp, { recursive: true });
+  return tmp;
+}
+
+function cleanupTemp(dir: string): void {
+  rmSync(dir, { recursive: true, force: true });
 }
 
 describe("WeeklyReport", () => {
@@ -45,17 +62,76 @@ describe("WeeklyReport", () => {
     expect(stdout).toContain("No captured activity");
   });
 
-  test("renders commits as nested list items, not semicolon-joined", () => {
-    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
-    expect(stdout).toMatch(/- \*\*infra-migration\*\* \(main\)\n  - /);
-    expect(stdout).not.toContain("; ");
-  });
-
   test("linkifies commit ids when repos.json maps the repo", () => {
     const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
     expect(stdout).toContain(
       "[`a1b2c3d`](https://github.com/example-org/infra-migration/commit/a1b2c3d) migrate OIDC provider config"
     );
+  });
+
+  test("done: lines from EOD appear BEFORE Evidence block", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    const shippedIdx = stdout.indexOf("## Shipped");
+    const evidenceIdx = stdout.indexOf("**Evidence**");
+    const doneIdx = stdout.indexOf("OIDC migration cut over to staging");
+    // done: text must appear between Shipped heading and Evidence
+    expect(doneIdx).toBeGreaterThan(shippedIdx);
+    expect(doneIdx).toBeLessThan(evidenceIdx);
+  });
+
+  test("Evidence block exists and contains linked sha bullets", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    expect(stdout).toContain("**Evidence** (activity log)");
+    expect(stdout).toContain("[`a1b2c3d`]");
+  });
+
+  test("decided: line appears under Decisions", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    const decisionsIdx = stdout.indexOf("## Decisions");
+    const blockedIdx = stdout.indexOf("## Blocked");
+    const decidedText = "rate limiter uses token bucket over sliding window";
+    const decidedIdx = stdout.indexOf(decidedText);
+    expect(decidedIdx).toBeGreaterThan(decisionsIdx);
+    expect(decidedIdx).toBeLessThan(blockedIdx);
+  });
+
+  test("blocked: line appears under Blocked", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    const blockedSectionIdx = stdout.indexOf("## Blocked");
+    const nextWeekIdx = stdout.indexOf("## Next week");
+    const blockedText = "load-test environment access";
+    const blockedIdx = stdout.indexOf(blockedText);
+    expect(blockedIdx).toBeGreaterThan(blockedSectionIdx);
+    expect(blockedIdx).toBeLessThan(nextWeekIdx);
+  });
+
+  test("ticket label OPS-103 appears on rate-limiting evidence theme", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    expect(stdout).toContain("**OPS-103**");
+    expect(stdout).toContain("OPS-103-rate-limiting");
+  });
+
+  test("ISC-53: no EOD files still renders correctly with Evidence block", () => {
+    // Create a temp copy without eod/ dir
+    const tmp = makeTempFixtureCopy();
+    try {
+      rmSync(resolve(tmp, "worklog/eod"), { recursive: true, force: true });
+      const { stdout, exitCode } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"], { workDir: tmp });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("## Shipped");
+      expect(stdout).toContain("**Evidence** (activity log)");
+      // Decisions and Blocked should have fill-comments since no EOD
+      expect(stdout).toContain("<!-- fill: consequential calls made this week");
+      expect(stdout).toContain("<!-- fill: items that genuinely need someone else");
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("commits rendered as nested list under Evidence, not flat", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    // Evidence block should have nested structure
+    expect(stdout).toMatch(/- \*\*Evidence\*\* \(activity log\)\n {2}- /);
   });
 });
 
@@ -99,6 +175,55 @@ describe("EodCrossing", () => {
     // Check that done: lines appear from activity
     expect(stdout).toContain("done:");
   });
+
+  test("--save creates file and prints saved path", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      // Remove existing eod files so --save can create for 2026-06-03
+      rmSync(resolve(tmp, "worklog/eod"), { recursive: true, force: true });
+      const { stdout, exitCode } = runTool("EodCrossing.ts", ["--date", "2026-06-03", "--save"], { workDir: tmp });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("saved:");
+      const savedPath = resolve(tmp, "worklog/eod/2026-06-03.md");
+      expect(existsSync(savedPath)).toBe(true);
+      const content = readFileSync(savedPath, "utf-8");
+      expect(content).toContain("done:");
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("--save refuses to overwrite existing file", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      // 2026-06-02.md already exists in fixture
+      const { stderr, exitCode } = runTool("EodCrossing.ts", ["--date", "2026-06-02", "--save"], { workDir: tmp });
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain("refusing to overwrite");
+      // Verify original file unchanged
+      const original = readFileSync(resolve(fixtureDir, "worklog/eod/2026-06-02.md"), "utf-8");
+      const current = readFileSync(resolve(tmp, "worklog/eod/2026-06-02.md"), "utf-8");
+      expect(current).toBe(original);
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("--save and --out together error", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      const outPath = resolve(tmp, "test-out.md");
+      const { exitCode, stderr } = runTool(
+        "EodCrossing.ts",
+        ["--date", "2026-06-03", "--save", "--out", outPath],
+        { workDir: tmp }
+      );
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain("mutually exclusive");
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
 });
 
 describe("MondayPlan", () => {
@@ -131,7 +256,7 @@ describe("MondayPlan", () => {
 
 describe("DailyBrief", () => {
   test("shows yesterday's activity summary", () => {
-    // Brief for Wednesday 2026-06-03 → yesterday = Tuesday 2026-06-02
+    // Brief for Wednesday 2026-06-03 -> yesterday = Tuesday 2026-06-02
     const { stdout, exitCode } = runTool("DailyBrief.ts", ["--date", "2026-06-03"]);
     expect(exitCode).toBe(0);
     expect(stdout).toContain("## Yesterday");
@@ -140,7 +265,7 @@ describe("DailyBrief", () => {
   });
 
   test("Monday uses Friday as yesterday", () => {
-    // Brief for Monday 2026-06-08 → yesterday = Friday 2026-06-05
+    // Brief for Monday 2026-06-08 -> yesterday = Friday 2026-06-05
     const { stdout } = runTool("DailyBrief.ts", ["--date", "2026-06-08"]);
     expect(stdout).toContain("2026-06-05"); // Friday
   });

@@ -1,9 +1,9 @@
 {"ts":"2026-06-01T09:15:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s001","branch":"main","files_dirty":2,"last_commit":"a1b2c3d migrate OIDC provider config"}
 {"ts":"2026-06-01T14:30:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s002","branch":"main","files_dirty":0,"last_commit":"e4f5a6b add rollback script"}
-{"ts":"2026-06-02T10:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s003","branch":"feature/rate-limiting","files_dirty":3,"last_commit":"17f8e9c implement token bucket rate limiter"}
+{"ts":"2026-06-02T10:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s003","branch":"feature/OPS-103-rate-limiting","files_dirty":3,"last_commit":"17f8e9c implement token bucket rate limiter"}
 {"ts":"2026-06-02T16:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s004","branch":"fix/rollback-timeout","files_dirty":1,"last_commit":"b0d1e2f increase rollback timeout to 300s"}
 this is not valid json and should be skipped
-{"ts":"2026-06-03T09:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s005","branch":"feature/rate-limiting","files_dirty":0,"last_commit":"43a4b5c add rate limiter unit tests"}
+{"ts":"2026-06-03T09:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s005","branch":"feature/OPS-103-rate-limiting","files_dirty":0,"last_commit":"43a4b5c add rate limiter unit tests"}
 {"ts":"2026-06-03T15:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s006","branch":"main","files_dirty":1,"last_commit":"06c7d8e merge rate-limiting to main"}
 {"ts":"2026-06-04T11:00:00Z","type":"session","cwd":"/home/user/work/initiatives/infra-migration","session":"s007","branch":"main","files_dirty":0,"last_commit":"f9e0a1b staging deploy green"}
 {"ts":"2026-06-04T17:00:00Z","type":"session","cwd":"/home/user/work/initiatives/api-gateway","session":"s008","branch":"feature/auth-headers","files_dirty":2,"last_commit":"c2d3e4f add auth header forwarding"}
