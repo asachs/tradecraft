@@ -6,7 +6,8 @@
  */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolveWorkDir } from "./lib/config.ts";
+import { resolveWorkDir, loadRepoLinks } from "./lib/config.ts";
+import { linkifyCommit } from "./lib/links.ts";
 import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/activity.ts";
 import { parseLedger, filterByDueWindow, filterOverdue } from "./lib/ledger.ts";
 import { parseDate, formatDate, yesterdayWindow, todayWindow } from "./lib/dates.ts";
@@ -68,9 +69,17 @@ if (groups.length === 0) {
   }, 0);
   lines.push(`Repos touched: ${repoNames.join(", ")} | Commits seen: ${totalCommits}`);
   lines.push("");
+  const repoLinks = loadRepoLinks(workDir);
   for (const g of groups) {
     const commits = [...new Set(g.entries.filter((e) => e.last_commit).map((e) => e.last_commit))];
-    lines.push(`- **${g.repo}** (${g.branch}): ${commits.length > 0 ? commits.join("; ") : "no commits"}`);
+    if (commits.length === 0) {
+      lines.push(`- **${g.repo}** (${g.branch}): no commits`);
+    } else {
+      lines.push(`- **${g.repo}** (${g.branch})`);
+      for (const c of commits) {
+        lines.push(`  - ${linkifyCommit(c, repoLinks[g.repo])}`);
+      }
+    }
   }
 }
 lines.push("");

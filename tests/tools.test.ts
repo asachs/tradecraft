@@ -176,6 +176,13 @@ describe("EodCrossing", () => {
     expect(stdout).toContain("done:");
   });
 
+  test("done: lines carry clickable commit links when repos.json maps the repo", () => {
+    const { stdout } = runTool("EodCrossing.ts", ["--date", "2026-06-03"]);
+    expect(stdout).toMatch(
+      /done: api-gateway\/[^\n]*\[`[0-9a-f]{7,40}`\]\(https:\/\/github\.com\/example-org\/api-gateway\/commit\//
+    );
+  });
+
   test("--save creates file and prints saved path", () => {
     const tmp = makeTempFixtureCopy();
     try {
@@ -279,5 +286,14 @@ describe("DailyBrief", () => {
   test("shows overdue promises with ticket refs", () => {
     const { stdout } = runTool("DailyBrief.ts", ["--date", "2026-06-05"]);
     expect(stdout).toContain("OPS-103");
+  });
+
+  test("renders commits as a nested list with clickable links", () => {
+    // Brief for 2026-06-04 -> yesterday = 2026-06-03 (api-gateway commits)
+    const { stdout } = runTool("DailyBrief.ts", ["--date", "2026-06-04"]);
+    expect(stdout).toContain(
+      "  - [`43a4b5c`](https://github.com/example-org/api-gateway/commit/43a4b5c) add rate limiter unit tests"
+    );
+    expect(stdout).not.toContain("; ");
   });
 });

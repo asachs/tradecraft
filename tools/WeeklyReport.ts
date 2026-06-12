@@ -11,6 +11,7 @@ import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/a
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
 import { parseEodFiles, filterEodByWindow } from "./lib/eod.ts";
 import { parseDate, formatDate, isoWeekWindow, isoWeekNumber, nextWeekWindow } from "./lib/dates.ts";
+import { linkifyCommit } from "./lib/links.ts";
 
 function parseArgs(): { week: Date; out?: string } {
   const args = process.argv.slice(2);
@@ -34,17 +35,6 @@ function parseArgs(): { week: Date; out?: string } {
 function extractTicketFromBranch(branch: string): string | undefined {
   const m = branch.match(/\b([A-Z][A-Z0-9]+-\d+)\b/);
   return m ? m[1] : undefined;
-}
-
-/**
- * Render a `<sha> <message>` one-liner with the sha as a markdown link
- * when the repo's web base URL is known (from WORK_DIR/repos.json).
- */
-function linkifyCommit(lastCommit: string, repoUrl?: string): string {
-  const m = lastCommit.match(/^([0-9a-f]{7,40})\s+(.*)$/);
-  if (!m || !repoUrl) return lastCommit;
-  const [, sha, message] = m;
-  return `[\`${sha}\`](${repoUrl}/commit/${sha}) ${message}`;
 }
 
 const { week, out } = parseArgs();
