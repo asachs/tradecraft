@@ -47,6 +47,10 @@ Four deterministic CLI tools that turn passively-captured activity and a promise
 
 All tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
 
+### EOD save-review loop
+
+Run `bun tools/EodCrossing.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
+
 ### Configuration
 
 Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools read:
