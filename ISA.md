@@ -3,7 +3,7 @@ task: "Report engine — four bun/TS CLI tools turning passive activity capture 
 project: claude-work-scaffold
 effort: E3
 effort_source: classifier
-phase: verify
+phase: complete
 progress: 53/53
 mode: interactive
 started: 2026-06-12T01:05:00Z
@@ -162,6 +162,10 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - 2026-06-12: Implementation by Forge (GPT-5.4) against this ISA as spec; primary verified independently (re-ran bun test, ran all four tools, ran anti-sweeps). Show-your-math on E3 delegation floor (2nd delegation skipped): single cohesive repo spec — a second writer adds merge risk, not speed; research delegation already spent in the payments-primer run this session.
 - 2026-06-12: Impact inversion (Andre: "anyone can generate a change log"). Every impact sentence must have a human author — the engine cannot fabricate impact, it can only *order* what humans wrote. New ordering: reviewed EOD `done:` claims → ledger outcomes → commit Evidence appendix. The EOD save-review loop (`--save`, refuse-overwrite) makes the human-authoring moment cheap; ISC-53 guarantees the system degrades gracefully when the habit lapses — the EOD ritual is leverage, not load-bearing.
 - 2026-06-12: Impact-inversion build again single-writer (Forge, agent a51dad78) — WeeklyReport.ts is touched by every feature in this batch; parallel writers would collide on the same file. Show-your-math accepted for the delegation floor.
+
+## Changelog
+
+- 2026-06-12 — conjectured: commit themes grouped by repo/branch make an adequate Shipped headline for a manager-ready weekly report. refuted by: Andre's review — "the weekly report is a list of effort, not very well aligned on impact of the changes. Anyone can generate a change log." learned: impact requires human authorship; a deterministic engine cannot synthesize the "so what" — it can only order human claims above machine evidence, and design the cheapest possible moment (EOD save-review) for the human to author the claim. criterion now: ISC-46..53 (reviewed done: lines headline Shipped; commits demoted to Evidence appendix; graceful zero-EOD degradation so the habit is leverage, not load-bearing).
 
 ## Verification
 
