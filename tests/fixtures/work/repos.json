@@ -1,0 +1,4 @@
+{
+  "infra-migration": "https://github.com/example-org/infra-migration",
+  "api-gateway": "https://github.com/example-org/api-gateway"
+}

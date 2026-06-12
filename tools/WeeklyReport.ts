@@ -6,10 +6,10 @@
  */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolveWorkDir } from "./lib/config.ts";
+import { resolveWorkDir, loadRepoLinks } from "./lib/config.ts";
 import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/activity.ts";
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
-import { parseDate, formatDate, isoWeekWindow, nextWeekWindow } from "./lib/dates.ts";
+import { parseDate, formatDate, isoWeekWindow, isoWeekNumber, nextWeekWindow } from "./lib/dates.ts";
 
 function parseArgs(): { week: Date; out?: string } {
   const args = process.argv.slice(2);
@@ -24,6 +24,17 @@ function parseArgs(): { week: Date; out?: string } {
     }
   }
   return { week, out };
+}
+
+/**
+ * Render a `<sha> <message>` one-liner with the sha as a markdown link
+ * when the repo's web base URL is known (from WORK_DIR/repos.json).
+ */
+function linkifyCommit(lastCommit: string, repoUrl?: string): string {
+  const m = lastCommit.match(/^([0-9a-f]{7,40})\s+(.*)$/);
+  if (!m || !repoUrl) return lastCommit;
+  const [, sha, message] = m;
+  return `[\`${sha}\`](${repoUrl}/commit/${sha}) ${message}`;
 }
 
 const { week, out } = parseArgs();
@@ -61,7 +72,7 @@ const nextWeekDue = filterByDueWindow(
 
 const lines: string[] = [];
 const endSunday = new Date(parseDate(end).getTime() - 86400000);
-lines.push(`# Weekly Report — ${start} to ${formatDate(endSunday)}`);
+lines.push(`# Weekly Report — W${isoWeekNumber(parseDate(start))} (${start} to ${formatDate(endSunday)})`);
 lines.push("");
 
 // Shipped
@@ -70,13 +81,17 @@ lines.push("");
 if (groups.length === 0 && closedThisWeek.length === 0) {
   lines.push("No captured activity or completed promises this week.");
 } else {
+  const repoLinks = loadRepoLinks(workDir);
   for (const g of groups) {
     const commits = g.entries
       .filter((e) => e.last_commit)
       .map((e) => e.last_commit);
     const uniqueCommits = [...new Set(commits)];
     if (uniqueCommits.length > 0) {
-      lines.push(`- **${g.repo}** (${g.branch}): ${uniqueCommits.join("; ")}`);
+      lines.push(`- **${g.repo}** (${g.branch})`);
+      for (const c of uniqueCommits) {
+        lines.push(`  - ${linkifyCommit(c, repoLinks[g.repo])}`);
+      }
     }
   }
   for (const p of closedThisWeek) {

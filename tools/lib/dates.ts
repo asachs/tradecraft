@@ -37,6 +37,17 @@ export function isoWeekWindow(date: Date): { start: string; end: string } {
 }
 
 /**
+ * ISO 8601 week number (1-53) of the week containing `date`.
+ * The ISO week's year is the year of its Thursday.
+ */
+export function isoWeekNumber(date: Date): number {
+  const thursday = new Date(date);
+  thursday.setUTCDate(date.getUTCDate() + (4 - isoDayOfWeek(date)));
+  const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+  return Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+/**
  * "Today" window: [date, date+1) as YYYY-MM-DD strings.
  */
 export function todayWindow(now: Date): { start: string; end: string } {

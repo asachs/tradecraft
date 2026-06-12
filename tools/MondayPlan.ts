@@ -8,7 +8,7 @@ import { writeFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { resolveWorkDir } from "./lib/config.ts";
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
-import { parseDate, formatDate, isoWeekWindow } from "./lib/dates.ts";
+import { parseDate, formatDate, isoWeekWindow, isoWeekNumber } from "./lib/dates.ts";
 
 function parseArgs(): { date: Date; out?: string } {
   const args = process.argv.slice(2);
@@ -60,7 +60,7 @@ try {
 }
 
 const lines: string[] = [];
-lines.push(`# Monday Plan — week of ${start}`);
+lines.push(`# Monday Plan — W${isoWeekNumber(parseDate(start))} (week of ${start})`);
 lines.push("");
 
 // Promises due this week

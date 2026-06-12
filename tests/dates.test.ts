@@ -7,7 +7,20 @@ import {
   todayWindow,
   yesterdayWindow,
   nextWeekWindow,
+  isoWeekNumber,
 } from "../tools/lib/dates.ts";
+
+describe("isoWeekNumber", () => {
+  test("mid-year week", () => {
+    expect(isoWeekNumber(parseDate("2026-06-01"))).toBe(23); // Mon of W23
+  });
+  test("Jan 1 belonging to previous year's last week", () => {
+    expect(isoWeekNumber(parseDate("2027-01-01"))).toBe(53); // Fri, ISO W53 of 2026
+  });
+  test("late Dec belonging to next year's W1", () => {
+    expect(isoWeekNumber(parseDate("2024-12-30"))).toBe(1); // Mon, ISO W1 of 2025
+  });
+});
 
 describe("parseDate / formatDate", () => {
   test("round-trips a date string", () => {

@@ -54,6 +54,7 @@ Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools re
 - `$WORK_DIR/worklog/activity.jsonl` — session activity captured by the hook
 - `$WORK_DIR/WORK_LEDGER.md` — promise ledger (markdown table)
 - `$WORK_DIR/initiatives/` — initiative directories (for MondayPlan)
+- `$WORK_DIR/repos.json` — optional map of repo basename → web base URL (e.g. `{"my-repo": "https://github.com/org/my-repo"}`). When present, WeeklyReport renders commit ids as clickable `<base>/commit/<sha>` links; otherwise ids stay bare text.
 
 ### The membrane rule
 
