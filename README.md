@@ -32,6 +32,39 @@ cp ~/work-scaffold/templates/BRAG.md ~/work/
 
 Then start `claude` (ideally inside tmux on an always-on host) and work normally. The activity log accumulates; run the workflows on Friday.
 
+## Report engine
+
+Four deterministic CLI tools that turn passively-captured activity and a promise ledger into review-ready markdown drafts. No LLM calls, no network access, no external dependencies — just bun + TypeScript.
+
+### Tools
+
+| Tool | Purpose | Key flags |
+|------|---------|-----------|
+| `bun tools/WeeklyReport.ts` | Manager-ready weekly summary (Shipped / In flight / Decisions / Blocked / Next week) | `--week YYYY-MM-DD` (ISO week containing that date; default: current week) |
+| `bun tools/EodCrossing.ts` | Membrane-safe end-of-day one-liners (done/decided/promised/learned/met/blocked) | `--date YYYY-MM-DD` (default: today) |
+| `bun tools/MondayPlan.ts` | Week plan with promises, overdue items, initiatives, and outcome stubs | `--date YYYY-MM-DD` (default: today) |
+| `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
+
+All tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
+
+### Configuration
+
+Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools read:
+
+- `$WORK_DIR/worklog/activity.jsonl` — session activity captured by the hook
+- `$WORK_DIR/WORK_LEDGER.md` — promise ledger (markdown table)
+- `$WORK_DIR/initiatives/` — initiative directories (for MondayPlan)
+
+### The membrane rule
+
+These tools **draft** to stdout. A human reviews, edits, and sends. Nothing is ever sent automatically. Every draft follows the membrane: self-authored prose, ticket IDs as bare references, no code, no secrets, no hostnames, no customer data.
+
+### Running tests
+
+```bash
+bun test
+```
+
 ## License / provenance
 
 Personal methodology, MIT licensed. Created prior to and independent of any employment. Contains no employer confidential information by design — and the workflows are built to keep it that way.
