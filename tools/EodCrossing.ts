@@ -9,7 +9,8 @@
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { resolveWorkDir } from "./lib/config.ts";
+import { resolveWorkDir, loadRepoLinks } from "./lib/config.ts";
+import { linkifyCommit } from "./lib/links.ts";
 import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/activity.ts";
 import { parseLedger, filterByDueWindow } from "./lib/ledger.ts";
 import { parseDate, formatDate, todayWindow } from "./lib/dates.ts";
@@ -63,13 +64,15 @@ const promisesDueToday = filterByDueWindow(promises, start, end);
 const outputLines: string[] = [];
 
 // done: lines from activity
+const repoLinks = loadRepoLinks(workDir);
 for (const g of groups) {
   const commits = g.entries
     .filter((e) => e.last_commit)
     .map((e) => e.last_commit);
   const uniqueCommits = [...new Set(commits)];
   if (uniqueCommits.length > 0) {
-    outputLines.push(`done: ${g.repo}/${g.branch} — ${uniqueCommits[uniqueCommits.length - 1]}`);
+    const last = linkifyCommit(uniqueCommits[uniqueCommits.length - 1], repoLinks[g.repo]);
+    outputLines.push(`done: ${g.repo}/${g.branch} — ${last}`);
   } else {
     outputLines.push(`done: ${g.repo}/${g.branch} — work in progress`);
   }
