@@ -3,7 +3,7 @@ task: "Report engine — four bun/TS CLI tools turning passive activity capture 
 project: claude-work-scaffold
 effort: E3
 effort_source: classifier
-phase: verify
+phase: complete
 progress: 38/38
 mode: interactive
 started: 2026-06-12T01:05:00Z
@@ -141,5 +141,5 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - ISC-34: `git status --porcelain tests/fixtures/` shows only `??` (untracked new fixtures); no files modified by tool runs.
 - ISC-35: `rg -il "payroc|worldnet|sachs|asachs|/Users/" tools/ tests/ | wc -l` → 0.
 - ISC-36: `rg -l 'fetch\(|XMLHttpRequest|net\.|http\.' tools/ | wc -l` → 0.
-- ISC-37: README "Report engine" section added (Forge); content confirmed in diff review at commit time.
-- ISC-38: commit/push evidence recorded below at commit time.
+- ISC-37: README "Report engine" section added (Forge); content confirmed in diff review at commit.
+- ISC-38: commit `7d0a36d` "Add report engine: four generators, shared lib, fixture week, 41 tests" — 17 files, 1300 insertions — pushed to origin/master (`c1ea314..7d0a36d`). `bun test`: "41 pass, 0 fail, 73 expect() calls".
