@@ -27,6 +27,25 @@ describe("parseEodFiles", () => {
     expect(dates.has("2026-06-05")).toBe(true);
   });
 
+  test("strips [BRAG?] tag and sets brag flag", () => {
+    const lines = parseEodFiles(fixtureDir);
+    const tagged = lines.filter((l) => l.brag);
+    expect(tagged.length).toBe(1);
+    expect(tagged[0].text).toBe(
+      "production cutover complete — migration initiative closed with zero rollback events (OPS-101)"
+    );
+    expect(tagged[0].text).not.toContain("[BRAG?]");
+  });
+
+  test("untagged lines have brag false and unchanged text", () => {
+    const lines = parseEodFiles(fixtureDir);
+    const untagged = lines.filter((l) => !l.brag);
+    expect(untagged.length).toBe(3);
+    for (const l of untagged) {
+      expect(l.text).not.toContain("[BRAG?]");
+    }
+  });
+
   test("skips HTML comments", () => {
     const lines = parseEodFiles(fixtureDir);
     const hasComment = lines.some((l) => l.text.includes("Review:") || l.text.includes("Membrane"));

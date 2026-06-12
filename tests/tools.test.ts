@@ -297,3 +297,73 @@ describe("DailyBrief", () => {
     expect(stdout).not.toContain("; ");
   });
 });
+
+describe("BragHarvest", () => {
+  test("creates BRAG.md and appends a stub for the tagged line", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      const { stdout, exitCode } = runTool("BragHarvest.ts", ["--week", "2026-06-03"], { workDir: tmp });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("appended: ## 2026-06-05 — production cutover complete");
+      const bragPath = resolve(tmp, "BRAG.md");
+      expect(existsSync(bragPath)).toBe(true);
+      const content = readFileSync(bragPath, "utf-8");
+      expect(content).toContain("# Brag Document");
+      expect(content).toContain("## 2026-06-05 — production cutover complete");
+      expect(content).toContain("- Evidence: OPS-101");
+      expect(content).toContain("- Why it mattered: <!-- fill:");
+      expect(content).not.toContain("[BRAG?]");
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("re-run is idempotent — nothing appended twice", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      runTool("BragHarvest.ts", ["--week", "2026-06-03"], { workDir: tmp });
+      const { stdout, exitCode } = runTool("BragHarvest.ts", ["--week", "2026-06-03"], { workDir: tmp });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("skipped (already present)");
+      expect(stdout).not.toContain("appended:");
+      const content = readFileSync(resolve(tmp, "BRAG.md"), "utf-8");
+      const occurrences = content.split("## 2026-06-05 — production cutover complete").length - 1;
+      expect(occurrences).toBe(1);
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("week with no tagged lines reports nothing to harvest, writes nothing", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      const { stdout, exitCode } = runTool("BragHarvest.ts", ["--week", "2025-01-01"], { workDir: tmp });
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain("nothing to harvest");
+      expect(existsSync(resolve(tmp, "BRAG.md"))).toBe(false);
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("new stubs insert newest-first after the marker", () => {
+    const tmp = makeTempFixtureCopy();
+    try {
+      runTool("BragHarvest.ts", ["--week", "2026-06-03"], { workDir: tmp });
+      const content = readFileSync(resolve(tmp, "BRAG.md"), "utf-8");
+      const markerIdx = content.indexOf("<!-- newest first -->");
+      const entryIdx = content.indexOf("## 2026-06-05");
+      expect(markerIdx).toBeGreaterThanOrEqual(0);
+      expect(entryIdx).toBeGreaterThan(markerIdx);
+    } finally {
+      cleanupTemp(tmp);
+    }
+  });
+
+  test("WeeklyReport output never contains the literal [BRAG?] tag", () => {
+    const { stdout } = runTool("WeeklyReport.ts", ["--week", "2026-06-03"]);
+    expect(stdout).not.toContain("[BRAG?]");
+    // The tagged line still appears, tag-stripped, as a Shipped headline
+    expect(stdout).toContain("production cutover complete");
+  });
+});

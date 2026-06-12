@@ -1,13 +1,13 @@
 ---
-task: "Report engine — four bun/TS CLI tools turning passive activity capture into manager-ready reporting drafts"
+task: "Report engine — BragHarvest: sweep [BRAG?] EOD lines into evidence-linked BRAG.md stubs"
 project: claude-work-scaffold
 effort: E3
 effort_source: classifier
 phase: complete
-progress: 53/53
+progress: 65/65
 mode: interactive
 started: 2026-06-12T01:05:00Z
-updated: 2026-06-12T01:05:00Z
+updated: 2026-06-12T23:55:00Z
 ---
 
 ## Problem
@@ -116,6 +116,21 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - [x] ISC-52: `bun test` passes with new coverage: EOD parsing, window filter, save-refusal, impact-led ordering, ticket labelling
 - [x] ISC-53: Anti: WeeklyReport with zero EOD files still renders a correct draft (evidence-only mode), exit 0 — adoption of the EOD habit is optional, not load-bearing
 
+### BragHarvest (2026-06-12, Andre: "yes, build it" — [BRAG?] harvest into BRAG.md stubs)
+
+- [x] ISC-54: `tools/lib/eod.ts` strips a trailing `[BRAG?]` tag from line text and exposes `brag: true` on the parsed line
+- [x] ISC-55: Lines without the tag parse with `brag: false`; text unchanged
+- [x] ISC-56: `tools/BragHarvest.ts` exists; `--week YYYY-MM-DD` selects the ISO week (default: current week)
+- [x] ISC-57: Harvest appends one stub per tagged line to `WORK_DIR/BRAG.md` in the template entry format: `## YYYY-MM-DD — <line text>` + What / Evidence / "Why it mattered" fill-comment
+- [x] ISC-58: Evidence field carries ticket refs extracted from the line text (`ABC-123` pattern); "none captured" fallback when absent
+- [x] ISC-59: Idempotent — re-running the same week appends nothing (existing entry headings matched)
+- [x] ISC-60: Missing `WORK_DIR/BRAG.md` → created with the template header before appending
+- [x] ISC-61: stdout reports each appended entry, or "nothing to harvest" when no tagged lines in window
+- [x] ISC-62: WeeklyReport output never contains the literal string `[BRAG?]` (tag stripped at parse)
+- [x] ISC-63: Fixture week gains ≥1 `[BRAG?]`-tagged done: line in an EOD file
+- [x] ISC-64: `bun test` green with new coverage: tag parsing, harvest append, idempotent re-run, BRAG.md creation, no-tag no-op
+- [x] ISC-65: Anti: BragHarvest writes only `WORK_DIR/BRAG.md` — never any other file, no network, no LLM; the "why it mattered" line is always a fill-comment, never machine-authored prose
+
 ## Test Strategy
 
 | isc | type | check | threshold | tool |
@@ -152,6 +167,9 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 | eod-persistence | eod.ts parser + EodCrossing --save | ISC-42..45 | shared-lib | false |
 | impact-inversion | WeeklyReport claim→outcome→evidence restructure + ticket labels | ISC-46..50, ISC-53 | eod-persistence | false |
 | impact-fixtures-tests | EOD fixtures + new test coverage | ISC-51, ISC-52 | impact-inversion | false |
+| brag-tag-parse | eod.ts strips [BRAG?] and exposes brag flag | ISC-54, ISC-55, ISC-62 | eod-persistence | false |
+| brag-harvest | BragHarvest.ts week sweep → BRAG.md stubs | ISC-56..61, ISC-65 | brag-tag-parse | false |
+| brag-fixtures-tests | tagged fixture line + harvest test coverage | ISC-63, ISC-64 | brag-harvest | false |
 
 ## Decisions
 
@@ -164,6 +182,7 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - 2026-06-12: Impact-inversion build again single-writer (Forge, agent a51dad78) — WeeklyReport.ts is touched by every feature in this batch; parallel writers would collide on the same file. Show-your-math accepted for the delegation floor.
 
 - 2026-06-12: Andre: "make commit ids clickable everywhere." `linkifyCommit` promoted to shared `tools/lib/links.ts`; DailyBrief and EodCrossing now link shas via repos.json (DailyBrief also switched from `;`-joins to nested lists per earlier feedback). EOD `done:` links survive into the saved file — acceptable: the human review step is the membrane gate, and repos.json is user-configured local data. Commit `808cfb6`, 66 tests green.
+- 2026-06-12: BragHarvest (single-writer, no Forge — E2 task, show-your-math: one small tool on existing libs, every file on one dependency line; a second writer serializes anyway). [BRAG?] harvest covers ALL prefixes, not just done: — brag-worthiness is the human's call at tag time, not inferred from the prefix. Idempotency keyed on exact entry-heading match: heading derives from the stable EOD line; if the human later edits the EOD line, a re-run creates a visible second stub (stdout reports it) — the human owns BRAG.md. "Why it mattered" is structurally always a fill-comment (ISC-65): impact-authorship doctrine extended from the weekly to the brag doc.
 
 ## Changelog
 
@@ -189,3 +208,9 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - ISC-51: `tests/fixtures/work/worklog/eod/2026-06-02.md` (done+decided) and `2026-06-05.md` (done+blocked) exist; branch `feature/OPS-103-rate-limiting` carries the ticket ref.
 - ISC-52: `bun test` → "64 pass, 0 fail, 115 expect() calls, Ran 64 tests across 5 files. [608ms]" — re-run by primary, independent of Forge's report.
 - ISC-53: WeeklyReport against fresh temp WORK_DIR (zero EOD files, zero activity) → exit 0, valid draft with fill-comment fallbacks (run by primary). Anti-sweeps re-run post-build: employer/personal-string sweep → 0; network-call sweep → 0.
+- ISC-54..55: `tests/eod.test.ts` — tagged fixture line parses with `brag: true` and text exactly equal to the untagged string; 3 untagged lines all `brag: false`. Suite green.
+- ISC-56..61: live probe (primary) — `WORK_DIR=$(mktemp -d copy) bun tools/BragHarvest.ts --week 2026-06-03` → "appended: ## 2026-06-05 — production cutover complete …"; BRAG.md created with template header, stub after `<!-- newest first -->` marker, `- Evidence: OPS-101`, `- Why it mattered: <!-- fill: … -->`; re-run → "skipped (already present)", zero duplicates; empty week (2025-01-01) → "nothing to harvest", no file written.
+- ISC-62: WeeklyReport fixture run contains "production cutover complete" but not "[BRAG?]" (test + live output).
+- ISC-63: `tests/fixtures/work/worklog/eod/2026-06-05.md` done: line carries trailing `[BRAG?]`.
+- ISC-64: `bun test` → "73 pass, 0 fail, 144 expect() calls, Ran 73 tests across 5 files. [786ms]".
+- ISC-65: BragHarvest writes only `join(workDir, "BRAG.md")` (single writeFileSync); network sweep 0; "Why it mattered" emitted only as fill-comment (grep confirms no prose path).
