@@ -34,7 +34,7 @@ Then start `claude` (ideally inside tmux on an always-on host) and work normally
 
 ## Report engine
 
-Four deterministic CLI tools that turn passively-captured activity and a promise ledger into review-ready markdown drafts. No LLM calls, no network access, no external dependencies — just bun + TypeScript.
+Deterministic CLI tools that turn passively-captured activity and a promise ledger into review-ready markdown drafts. No LLM calls, no network access, no external dependencies — just bun + TypeScript.
 
 ### Tools
 
@@ -45,8 +45,10 @@ Four deterministic CLI tools that turn passively-captured activity and a promise
 | `bun tools/MondayPlan.ts` | Week plan with promises, overdue items, initiatives, and outcome stubs | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
+| `bun tools/schedule.ts` | Install/run scheduled report delivery via launchd + macOS notifications | `install`, `uninstall`, `status`, `run <job>`, `run-all` |
+| `bun tools/serve.ts` | Localhost report dashboard at http://localhost:3141 | `--port 3141` |
 
-All tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
+All report tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
 
 ### EOD save-review loop
 
@@ -65,9 +67,38 @@ Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools re
 - `$WORK_DIR/initiatives/` — initiative directories (for MondayPlan)
 - `$WORK_DIR/repos.json` — optional map of repo basename → web base URL (e.g. `{"my-repo": "https://github.com/org/my-repo"}`). When present, WeeklyReport renders commit ids as clickable `<base>/commit/<sha>` links; otherwise ids stay bare text.
 
+### Scheduled delivery
+
+`schedule.ts` runs report tools on a schedule via macOS launchd, saves output to `$WORK_DIR/reports/<type>/<date>.md`, and fires native macOS notifications. No network, no external services — just local file writes and `osascript`.
+
+```bash
+bun tools/schedule.ts install    # install launchd plists (~5 jobs)
+bun tools/schedule.ts status     # show what's installed
+bun tools/schedule.ts run-all    # dry-run all jobs once
+bun tools/schedule.ts uninstall  # clean up
+```
+
+Default schedule (all times Europe/Dublin):
+
+| Job | Schedule | What it does |
+|-----|----------|--------------|
+| `monday-plan` | Mon 08:30 | MondayPlan → reports/monday-plan/ |
+| `daily-brief` | Tue–Fri 07:45 | DailyBrief → reports/daily-brief/ |
+| `eod-nudge` | Mon–Fri 17:00 | macOS notification if no EOD file for today |
+| `weekly-report` | Fri 16:00 | WeeklyReport → reports/weekly-report/ |
+| `brag-harvest` | Fri 16:30 | BragHarvest sweep |
+
+Reports are viewable with any editor or via the built-in dashboard:
+
+```bash
+bun tools/serve.ts              # http://localhost:3141
+```
+
+Logs go to `$WORK_DIR/logs/`.
+
 ### The membrane rule
 
-These tools **draft** to stdout. A human reviews, edits, and sends. Nothing is ever sent automatically. Every draft follows the membrane: self-authored prose, ticket IDs as bare references, no code, no secrets, no hostnames, no customer data.
+These tools **draft** to stdout or local files. A human reviews, edits, and sends. Nothing is ever sent automatically. Every draft follows the membrane: self-authored prose, ticket IDs as bare references, no code, no secrets, no hostnames, no customer data.
 
 ### Running tests
 
