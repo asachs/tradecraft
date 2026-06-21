@@ -29,7 +29,7 @@ export function parseEodFiles(workDir: string): EodLine[] {
   const eodDir = join(workDir, "worklog", "eod");
   let filenames: string[];
   try {
-    filenames = readdirSync(eodDir);
+    filenames = readdirSync(eodDir).sort();
   } catch {
     return [];
   }
