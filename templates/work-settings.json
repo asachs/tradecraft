@@ -1,0 +1,112 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/SessionActivityLog.hook.ts"
+          }
+        ]
+      }
+    ],
+    "PreToolCall": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/SecurityPipeline.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/PromptGuard.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/ContainmentGuard-work.hook.ts"
+          }
+        ]
+      }
+    ],
+    "PostToolCall": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/ToolActivityTracker.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/ContentScanner.hook.ts"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/PreCompact.hook.ts"
+          }
+        ]
+      }
+    ],
+    "PostResponse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/RepeatDetection.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/ISASync.hook.ts"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/PromptProcessing-work.hook.ts"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Edit(~/.claude/**)",
+      "Edit(~/work/**)",
+      "Edit(~/src/**)",
+      "Write(~/.claude/**)",
+      "Write(~/work/**)",
+      "Write(~/src/**)",
+      "Bash(bun test*)",
+      "Bash(bun tools/*)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(rg *)"
+    ],
+    "deny": [
+      "Bash(curl *elevenlabs*)",
+      "Bash(curl *telegram*)",
+      "Bash(curl *pulse*)",
+      "Bash(open *)",
+      "Bash(osascript *)"
+    ]
+  }
+}

@@ -4,7 +4,7 @@
  *
  * Usage: bun tools/MondayPlan.ts [--date YYYY-MM-DD] [--out <file>]
  */
-import { writeFileSync, readdirSync, statSync } from "node:fs";
+import { writeFileSync, readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { resolveWorkDir } from "./lib/config.ts";
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
@@ -106,6 +106,23 @@ lines.push("1. <!-- outcome -->");
 lines.push("2. <!-- outcome -->");
 lines.push("3. <!-- outcome -->");
 lines.push("");
+
+// Lead measures (optional — skip if file doesn't exist)
+const leadMeasuresPath = join(workDir, "lead-measures.md");
+if (existsSync(leadMeasuresPath)) {
+  const content = readFileSync(leadMeasuresPath, "utf-8");
+  const measureLines = content
+    .split("\n")
+    .filter((l) => l.startsWith("- ["));
+  if (measureLines.length > 0) {
+    lines.push("## Lead measures");
+    lines.push("");
+    for (const m of measureLines) {
+      lines.push(m);
+    }
+    lines.push("");
+  }
+}
 
 const output = lines.join("\n");
 
