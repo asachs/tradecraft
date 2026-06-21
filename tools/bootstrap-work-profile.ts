@@ -159,6 +159,15 @@ for (const dir of workDirs) {
   ensureDir(dir);
 }
 
+// ── Step 6b: Install lead-measures template ──
+
+console.log("\n[6b/8] Installing lead-measures template...");
+copyIfMissing(
+  join(TEMPLATES_DIR, "lead-measures.md"),
+  join(WORK_DIR, "lead-measures.md"),
+  "lead-measures.md → ~/work/"
+);
+
 // ── Step 7: Install scaffold hook ──
 
 console.log("\n[7/8] Installing SessionActivityLog hook...");

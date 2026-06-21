@@ -7,11 +7,19 @@
           {
             "type": "command",
             "command": "bun ~/.claude/hooks/SessionActivityLog.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/RepeatDetection.hook.ts"
+          },
+          {
+            "type": "command",
+            "command": "bun ~/.claude/hooks/ISASync.hook.ts"
           }
         ]
       }
     ],
-    "PreToolCall": [
+    "PreToolUse": [
       {
         "matcher": "",
         "hooks": [
@@ -25,12 +33,12 @@
           },
           {
             "type": "command",
-            "command": "bun ~/.claude/hooks/ContainmentGuard-work.hook.ts"
+            "command": "bun ~/.claude/hooks/ContainmentGuard.hook.ts"
           }
         ]
       }
     ],
-    "PostToolCall": [
+    "PostToolUse": [
       {
         "matcher": "",
         "hooks": [
@@ -56,28 +64,13 @@
         ]
       }
     ],
-    "PostResponse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun ~/.claude/hooks/RepeatDetection.hook.ts"
-          },
-          {
-            "type": "command",
-            "command": "bun ~/.claude/hooks/ISASync.hook.ts"
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "bun ~/.claude/hooks/PromptProcessing-work.hook.ts"
+            "command": "bun ~/.claude/hooks/PromptProcessing.hook.ts"
           }
         ]
       }
@@ -94,19 +87,19 @@
       "Write(~/.claude/**)",
       "Write(~/work/**)",
       "Write(~/src/**)",
-      "Bash(bun test*)",
-      "Bash(bun tools/*)",
-      "Bash(git *)",
-      "Bash(ls *)",
-      "Bash(cat *)",
-      "Bash(rg *)"
+      "Bash"
     ],
     "deny": [
-      "Bash(curl *elevenlabs*)",
-      "Bash(curl *telegram*)",
-      "Bash(curl *pulse*)",
-      "Bash(open *)",
+      "Bash(*elevenlabs*)",
+      "Bash(*telegram*)",
+      "Bash(*t.me/*)",
+      "Bash(*localhost:31337*)",
       "Bash(osascript *)"
     ]
+  },
+  "env": {
+    "PAI_DIR": "$HOME/.claude/PAI",
+    "WORK_DIR": "$HOME/work",
+    "WORK_MODE": "1"
   }
 }

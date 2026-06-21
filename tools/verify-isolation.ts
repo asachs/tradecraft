@@ -28,6 +28,21 @@ const FORBIDDEN_DIRS = [
   "PAI/MEMORY/VOICE",
   "PAI/MEMORY/AUTO",
   "PAI/MEMORY/SCRATCHPAD",
+  "PAI/USER/TELOS",
+  "PAI/USER/HEALTH",
+  "PAI/USER/FINANCES",
+  "PAI/USER/BUSINESS",
+];
+
+const FORBIDDEN_FILES = [
+  "PAI/USER/OUR_STORY.md",
+  "PAI/USER/OPINIONS.md",
+  "PAI/USER/PRINCIPAL_IDENTITY.md",
+  "PAI/USER/RESUME.md",
+  "PAI/USER/CORECONTENT.md",
+  "PAI/USER/WRITINGSTYLE.md",
+  "PAI/USER/RHETORICALSTYLE.md",
+  "PAI/USER/AI_WRITING_PATTERNS.md",
 ];
 
 const FORBIDDEN_PATTERNS = [
@@ -48,8 +63,8 @@ const ALLOWED_HOOKS = [
   "ContentScanner.hook.ts",
   "PreCompact.hook.ts",
   "SessionActivityLog.hook.ts",
-  "PromptProcessing-work.hook.ts",
-  "ContainmentGuard-work.hook.ts",
+  "PromptProcessing.hook.ts",
+  "ContainmentGuard.hook.ts",
 ];
 
 const ALLOWED_SKILLS = [
@@ -93,6 +108,16 @@ for (const dir of FORBIDDEN_DIRS) {
   const path = join(CLAUDE_DIR, dir);
   check(
     `no ${dir}`,
+    !existsSync(path),
+    existsSync(path) ? `found: ${path}` : undefined
+  );
+}
+
+// Check 1b: Forbidden personal files must not exist
+for (const file of FORBIDDEN_FILES) {
+  const path = join(CLAUDE_DIR, file);
+  check(
+    `no ${file}`,
     !existsSync(path),
     existsSync(path) ? `found: ${path}` : undefined
   );
