@@ -84,4 +84,14 @@ describe("filterEodByWindow", () => {
     const filtered = filterEodByWindow(lines, "2025-01-01", "2025-01-08");
     expect(filtered).toEqual([]);
   });
+
+  test("returns files in sorted date order regardless of filesystem order", () => {
+    const lines = parseEodFiles(fixtureDir);
+    // Fixture has 2026-06-02.md and 2026-06-05.md
+    // .sort() ensures 06-02 lines come before 06-05 lines
+    const dates = lines.map((l) => l.date);
+    for (let i = 1; i < dates.length; i++) {
+      expect(dates[i] >= dates[i - 1]).toBe(true);
+    }
+  });
 });

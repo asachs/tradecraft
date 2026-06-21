@@ -8,9 +8,18 @@
  * Usage:
  *   bun tools/build-work-archive.ts [--dry-run] [--out <dir>]
  */
-import { existsSync, readdirSync, statSync, mkdirSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  statSync,
+  mkdirSync,
+  copyFileSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve, basename } from "node:path";
+import { join, resolve } from "node:path";
 import { formatDate } from "./lib/dates.ts";
 
 // ── Whitelist configuration ──
@@ -23,9 +32,8 @@ const WORK_SAFE_HOOKS = [
   "ToolActivityTracker.hook.ts",
   "ContentScanner.hook.ts",
   "PreCompact.hook.ts",
-  "SessionActivityLog.hook.ts",
-  "PromptProcessing-work.hook.ts",
-  "ContainmentGuard-work.hook.ts",
+  "PromptProcessing.hook.ts",
+  "ContainmentGuard.hook.ts",
 ];
 
 const WORK_SAFE_SKILLS = [
@@ -50,7 +58,20 @@ const WORK_SAFE_SKILLS = [
   "BeCreative",
 ];
 
-const COPY_DIRS = ["ALGORITHM", "DOCUMENTATION", "TOOLS"];
+/** PAI subdirectories to copy in full (recursively). */
+const PAI_COPY_DIRS = ["ALGORITHM", "DOCUMENTATION", "TOOLS"];
+
+/** Hook subdirectories to copy in full (recursively). */
+const HOOK_COPY_DIRS = ["lib", "security"];
+
+/**
+ * Work-mode identity patterns for ContainmentGuard.
+ * These replace the upstream patterns (which are the open-source maintainer's)
+ * so the guard protects the actual user's identity on the work machine.
+ * Loaded from templates/containment-patterns-work.json if it exists.
+ */
+const SCAFFOLD_DIR = resolve(join(import.meta.dir, ".."));
+const WORK_PATTERNS_PATH = join(SCAFFOLD_DIR, "templates", "containment-patterns-work.json");
 
 // ── Args ──
 
@@ -77,61 +98,108 @@ if (!existsSync(paiRoot)) {
   process.exit(1);
 }
 
-// ── Collect files ──
+// ── Helpers ──
 
-const manifest: string[] = [];
+/** Recursively walk a directory and return all file paths relative to `base`. */
+function walk(base: string, rel = ""): string[] {
+  const results: string[] = [];
+  let entries: string[];
+  try {
+    entries = readdirSync(base);
+  } catch {
+    return results;
+  }
+  for (const entry of entries) {
+    const full = join(base, entry);
+    const entryRel = rel ? `${rel}/${entry}` : entry;
+    try {
+      if (statSync(full).isDirectory()) {
+        results.push(...walk(full, entryRel));
+      } else {
+        results.push(entryRel);
+      }
+    } catch {
+      // skip unreadable entries
+    }
+  }
+  return results;
+}
+
+/** Copy a file, creating parent directories as needed. */
+function stageCopy(src: string, dest: string) {
+  mkdirSync(join(dest, "..").replace(/\/\.\.$/, ""), { recursive: true });
+  const destDir = dest.substring(0, dest.lastIndexOf("/"));
+  if (destDir) mkdirSync(destDir, { recursive: true });
+  copyFileSync(src, dest);
+}
+
+// ── Collect manifest ──
+
+interface ManifestEntry {
+  /** Path relative to the archive root (e.g. "hooks/SecurityPipeline.hook.ts") */
+  archivePath: string;
+  /** Absolute source path on disk */
+  sourcePath: string;
+}
+
+const manifest: ManifestEntry[] = [];
 const missing: string[] = [];
 
-// Hooks
+// Individual hook files
 for (const hook of WORK_SAFE_HOOKS) {
-  const path = join(hooksDir, hook);
-  if (existsSync(path)) {
-    manifest.push(`hooks/${hook}`);
+  const src = join(hooksDir, hook);
+  if (existsSync(src)) {
+    manifest.push({ archivePath: `hooks/${hook}`, sourcePath: src });
   } else {
     missing.push(`hooks/${hook}`);
   }
 }
 
-// Hook lib (if exists)
-const hookLibDir = join(hooksDir, "lib");
-if (existsSync(hookLibDir)) {
-  const libFiles = readdirSync(hookLibDir).filter((f) => f.endsWith(".ts"));
-  for (const f of libFiles) {
-    manifest.push(`hooks/lib/${f}`);
+// Hook subdirectories (lib/, security/) — recursive
+for (const subdir of HOOK_COPY_DIRS) {
+  const subdirPath = join(hooksDir, subdir);
+  if (existsSync(subdirPath) && statSync(subdirPath).isDirectory()) {
+    for (const relFile of walk(subdirPath)) {
+      manifest.push({
+        archivePath: `hooks/${subdir}/${relFile}`,
+        sourcePath: join(subdirPath, relFile),
+      });
+    }
+  } else {
+    missing.push(`hooks/${subdir}/`);
   }
 }
 
-// Skills
+// Skills — recursive (includes Workflows/, Patterns/, Tools/ subdirs)
 for (const skill of WORK_SAFE_SKILLS) {
-  const path = join(skillsDir, skill);
-  if (existsSync(path) && statSync(path).isDirectory()) {
-    const files = readdirSync(path);
-    for (const f of files) {
-      manifest.push(`skills/${skill}/${f}`);
+  const skillDir = join(skillsDir, skill);
+  if (existsSync(skillDir) && statSync(skillDir).isDirectory()) {
+    for (const relFile of walk(skillDir)) {
+      manifest.push({
+        archivePath: `skills/${skill}/${relFile}`,
+        sourcePath: join(skillDir, relFile),
+      });
     }
-  } else if (existsSync(`${path}.md`)) {
-    manifest.push(`skills/${skill}.md`);
+  } else if (existsSync(`${skillDir}.md`)) {
+    manifest.push({
+      archivePath: `skills/${skill}.md`,
+      sourcePath: `${skillDir}.md`,
+    });
   } else {
     missing.push(`skills/${skill}`);
   }
 }
 
-// Whole directories
-for (const dir of COPY_DIRS) {
-  const path = join(paiRoot, dir);
-  if (existsSync(path) && statSync(path).isDirectory()) {
-    function walk(base: string, rel: string) {
-      for (const entry of readdirSync(base)) {
-        const full = join(base, entry);
-        const entryRel = rel ? `${rel}/${entry}` : entry;
-        if (statSync(full).isDirectory()) {
-          walk(full, entryRel);
-        } else {
-          manifest.push(`PAI/${dir}/${entryRel}`);
-        }
-      }
+// PAI directories (ALGORITHM, DOCUMENTATION, TOOLS) — recursive
+for (const dir of PAI_COPY_DIRS) {
+  const dirPath = join(paiRoot, dir);
+  if (existsSync(dirPath) && statSync(dirPath).isDirectory()) {
+    for (const relFile of walk(dirPath)) {
+      manifest.push({
+        archivePath: `PAI/${dir}/${relFile}`,
+        sourcePath: join(dirPath, relFile),
+      });
     }
-    walk(path, "");
   } else {
     missing.push(`PAI/${dir}`);
   }
@@ -147,8 +215,8 @@ if (missing.length > 0) {
 }
 
 console.log(`\nManifest (${manifest.length} files):`);
-for (const f of manifest) {
-  console.log(`  ${f}`);
+for (const entry of manifest) {
+  console.log(`  ${entry.archivePath}`);
 }
 
 if (dryRun) {
@@ -156,61 +224,70 @@ if (dryRun) {
   process.exit(0);
 }
 
-// ── Build tarball ──
+// ── Build tarball via staging directory (BSD tar compatible) ──
 
 const dateStr = formatDate(new Date());
 const archiveName = `pai-work-profile-${dateStr}.tar.gz`;
-const archivePath = join(outDir, archiveName);
 
 if (!existsSync(outDir)) {
   mkdirSync(outDir, { recursive: true });
 }
 
-// Build tar arguments: we need to specify each file path relative to its source
-const tarArgs = ["tar", "czf", archivePath];
+const stagingDir = join(outDir, `.staging-${Date.now()}`);
+mkdirSync(stagingDir, { recursive: true });
 
-// Create a temp manifest file for tar to read
-const manifestContent = manifest
-  .map((f) => {
-    if (f.startsWith("hooks/")) return join(hooksDir, f.slice(6));
-    if (f.startsWith("skills/")) return join(skillsDir, f.slice(7));
-    if (f.startsWith("PAI/")) return join(paiRoot, f.slice(4));
-    return f;
-  })
-  .join("\n");
-
-const manifestFile = join(outDir, ".archive-manifest.tmp");
-await Bun.write(manifestFile, manifestContent);
-
-// Use tar with transform to maintain the desired archive structure
-const homeBase = homedir();
-const proc = Bun.spawn(
-  [
-    "tar",
-    "czf",
-    archivePath,
-    `--transform=s|${hooksDir.slice(1)}/|hooks/|`,
-    `--transform=s|${skillsDir.slice(1)}/|skills/|`,
-    `--transform=s|${paiRoot.slice(1)}/|PAI/|`,
-    "-T",
-    manifestFile,
-  ],
-  { stdout: "pipe", stderr: "pipe" }
-);
-
-const exitCode = await proc.exited;
-const stderr = await new Response(proc.stderr).text();
-
-// Clean up manifest file
 try {
-  const { unlinkSync } = await import("node:fs");
-  unlinkSync(manifestFile);
-} catch {}
+  // Copy all files into staging with correct relative paths
+  for (const entry of manifest) {
+    const dest = join(stagingDir, entry.archivePath);
+    stageCopy(entry.sourcePath, dest);
+  }
 
-if (exitCode !== 0) {
-  console.error(`error: tar failed (exit ${exitCode}): ${stderr}`);
-  process.exit(1);
+  // Patch ContainmentGuard with work-mode identity patterns
+  const guardPath = join(stagingDir, "hooks", "ContainmentGuard.hook.ts");
+  if (existsSync(guardPath) && existsSync(WORK_PATTERNS_PATH)) {
+    try {
+      const patterns: string[] = JSON.parse(readFileSync(WORK_PATTERNS_PATH, "utf-8"));
+      let guardContent = readFileSync(guardPath, "utf-8");
+
+      // Replace the IDENTITY_PATTERNS array
+      const patternArrayStr = patterns.map((p) => `  '${p}',`).join("\n");
+      guardContent = guardContent.replace(
+        /const IDENTITY_PATTERNS: readonly string\[\] = \[[\s\S]*?\];/,
+        `const IDENTITY_PATTERNS: readonly string[] = [\n${patternArrayStr}\n];`
+      );
+      writeFileSync(guardPath, guardContent);
+      console.log("  patched: ContainmentGuard.hook.ts with work-mode identity patterns");
+    } catch (err) {
+      console.error(`  warning: failed to patch ContainmentGuard: ${err}`);
+    }
+  } else if (!existsSync(WORK_PATTERNS_PATH)) {
+    console.error(
+      "  warning: templates/containment-patterns-work.json not found — " +
+      "ContainmentGuard will use upstream identity patterns"
+    );
+  }
+
+  // Create tarball from staging directory
+  const archivePath = join(outDir, archiveName);
+  const proc = Bun.spawn(
+    ["tar", "czf", archivePath, "-C", stagingDir, "."],
+    { stdout: "pipe", stderr: "pipe" }
+  );
+
+  const exitCode = await proc.exited;
+  const stderr = await new Response(proc.stderr).text();
+
+  if (exitCode !== 0) {
+    console.error(`error: tar failed (exit ${exitCode}): ${stderr}`);
+    process.exit(1);
+  }
+
+  console.log(`\nArchive created: ${archivePath}`);
+  console.log(`Contains ${manifest.length} files from the work-safe whitelist.`);
+} finally {
+  // Clean up staging directory
+  try {
+    rmSync(stagingDir, { recursive: true, force: true });
+  } catch {}
 }
-
-console.log(`\nArchive created: ${archivePath}`);
-console.log(`Contains ${manifest.length} files from the work-safe whitelist.`);
