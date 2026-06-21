@@ -1,8 +1,9 @@
 ---
 task: "Report engine — BragHarvest: sweep [BRAG?] EOD lines into evidence-linked BRAG.md stubs"
+slug: 20260612-010500_report-engine
 project: claude-work-scaffold
 effort: E3
-effort_source: classifier
+effort_source: auto
 phase: complete
 progress: 65/65
 mode: interactive
