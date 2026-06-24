@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * EodCrossing — draft membrane-safe end-of-day one-liners to stdout.
+ * EodSummary — draft end-of-day one-liners to stdout for review.
  *
- * Usage: bun tools/EodCrossing.ts [--date YYYY-MM-DD] [--out <file>] [--save]
+ * Usage: bun tools/EodSummary.ts [--date YYYY-MM-DD] [--out <file>] [--save]
  *
  * --save writes the draft to WORK_DIR/worklog/eod/<date>.md for human editing.
  * --save and --out are mutually exclusive.
@@ -95,7 +95,7 @@ const capped = outputLines.slice(0, 6);
 
 // Add review reminder
 capped.push("");
-capped.push("<!-- Review: edit these lines before carrying anything off-machine. Membrane applies. -->");
+capped.push("<!-- Review: edit these lines in your own words before sharing — nothing is sent automatically. -->");
 
 const output = capped.join("\n") + "\n";
 

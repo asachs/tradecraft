@@ -173,7 +173,7 @@ Files are independent — can be done in any order. Logical grouping:
 **Pre-publish checklist:**
 
 - [ ] LICENSE added (choose: MIT / Apache-2.0)
-- [ ] README rewritten for an external audience — what it is, the membrane/NDA-abstraction principle, quickstart, `WORK_DIR` config
+- [ ] README rewritten for an external audience — what it is, the review-before-sharing / NDA-abstraction principle, quickstart, `WORK_DIR` config
 - [ ] Decide repo identity: rename directory + git remote to `tradecraft`, or publish under current name
 - [ ] CONTRIBUTING note + scrubbed git history (squash or fresh-init if any private data ever touched a commit)
 - [ ] Strip or generalize anything in `templates/` that assumes a specific PAI install layout

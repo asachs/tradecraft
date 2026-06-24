@@ -21,7 +21,7 @@ Default to NATIVE unless the task is trivially small (MINIMAL) or explicitly com
 - **Test what you ship.** If you wrote code, run the tests. If tests don't exist, write one.
 - **ISA first.** For non-trivial work: write the ISA before the first edit. (See project CLAUDE.md for the template and rules.)
 - **Decisions are logged when made.** Architecture/tooling/approach calls go to the initiative's DECISIONS.md.
-- **Membrane applies.** Work data stays on this machine. See project CLAUDE.md for the full membrane spec.
+- **Review before sharing.** Drafts get a human review before anything is shared; ordinary discretion on confidential detail. See project CLAUDE.md.
 
 ## Context Routing
 
@@ -29,7 +29,7 @@ Read these for domain context (all optional, degrade gracefully when missing):
 
 | Path | Content |
 |------|---------|
-| `~/src/tradecraft/CLAUDE.md` | Scaffold operational rules + membrane |
+| `~/src/tradecraft/CLAUDE.md` | Scaffold operational rules + sharing discretion |
 | `~/src/tradecraft/company.md` | Employer-specific context (gitignored) |
 | `~/work/WORK_LEDGER.md` | Active promises |
 | `~/work/initiatives/` | Active ISAs |

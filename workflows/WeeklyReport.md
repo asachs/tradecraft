@@ -19,5 +19,5 @@ Draft a manager-ready weekly summary from the week's activity log. The user edit
    - **Next week** — top 3 intended outcomes
 3. Tone: plain, factual, specific. Lead with outcomes, not effort. No adjectives doing the work numbers should do.
 4. Length: fits on one screen. If it doesn't, cut "in flight" detail first.
-5. **Membrane check** if the report will leave work infrastructure: same rules as EodCrossing.
+5. **Discretion check** before sharing it externally: own words, ticket refs not contents, nothing confidential — same as the EOD summary.
 6. Output the draft and STOP.

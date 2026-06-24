@@ -4,7 +4,7 @@
  *
  * Appends one JSONL line per session stop to ~/work/worklog/activity.jsonl:
  * timestamp, cwd, git branch, and files touched (uncommitted changes count).
- * Passive visibility — the EodCrossing / WeeklyReport workflows read this.
+ * Passive visibility — the EodSummary / WeeklyReport workflows read this.
  *
  * Install: copy to ~/.claude/hooks/ and merge settings-snippet.json into
  * ~/.claude/settings.json. Requires bun on PATH.

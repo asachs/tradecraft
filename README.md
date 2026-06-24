@@ -8,16 +8,16 @@ Portable Claude Code working patterns for a corporate environment. **Patterns on
 
 A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM:
 
-- **CLAUDE.md** — work-profile instructions: operational rules, the confidentiality membrane, capture conventions
+- **CLAUDE.md** — work-profile instructions: operational rules, the review conventions, capture conventions
 - **templates/** — ISA (definition-of-done) template, decision log, promise ledger, brag document
-- **workflows/** — prompts for the end-of-day crossing summary and the weekly report
+- **workflows/** — prompts for the end-of-day summary and the weekly report
 - **hooks/** — session activity logging (auto-accumulates "what was done, where") + settings snippet
 
 ## Core principles
 
 1. **Definition of done before starting.** Every non-trivial piece of work gets an ISA — a short document stating the goal and the verifiable criteria — before the first edit.
 2. **Record at the moment of doing.** The activity log and decision log are written as work happens, never reconstructed.
-3. **The membrane.** Work artifacts (code, customer data, internal docs) stay on work infrastructure. Only self-authored summaries — plain prose, ticket IDs by reference — cross outward, and only after human review.
+3. **Review before sharing.** The tools draft; you decide what to do with the output. Anything shared carries ordinary discretion — your own words, ticket IDs by reference, no code, secrets, or customer data — and only after you've reviewed it.
 4. **Generated, then edited.** Reports are drafted by the work brain from the activity log; the human edits and sends. Nothing auto-sends.
 
 ## Bootstrap on a fresh work machine/VM
@@ -43,7 +43,7 @@ Deterministic CLI tools that turn passively-captured activity and a promise ledg
 | Tool | Purpose | Key flags |
 |------|---------|-----------|
 | `bun tools/WeeklyReport.ts` | Manager-ready weekly summary (Shipped / In flight / Decisions / Blocked / Next week) | `--week YYYY-MM-DD` (ISO week containing that date; default: current week) |
-| `bun tools/EodCrossing.ts` | Membrane-safe end-of-day one-liners (done/decided/promised/learned/met/blocked) | `--date YYYY-MM-DD` (default: today) |
+| `bun tools/EodSummary.ts` | End-of-day one-liners to review (done/decided/promised/learned/met/blocked) | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/MondayPlan.ts` | Week plan with promises, overdue items, initiatives, and outcome stubs | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
@@ -54,7 +54,7 @@ All report tools accept `--out <file>` to write to a file (must resolve under `W
 
 ### EOD save-review loop
 
-Run `bun tools/EodCrossing.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
+Run `bun tools/EodSummary.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
 
 ### BRAG harvest loop
 
@@ -98,9 +98,9 @@ bun tools/serve.ts              # http://localhost:3141
 
 Logs go to `$WORK_DIR/logs/`.
 
-### The membrane rule
+### Review before sharing
 
-These tools **draft** to stdout or local files. A human reviews, edits, and sends. Nothing is ever sent automatically. Every draft follows the membrane: self-authored prose, ticket IDs as bare references, no code, no secrets, no hostnames, no customer data.
+These tools **draft** to stdout or local files. You review, edit, and send — nothing is ever sent automatically. Ordinary discretion on anything you share: your own words, ticket IDs as bare references, no code, secrets, hostnames, or customer data.
 
 ### Running tests
 

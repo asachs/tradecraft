@@ -89,7 +89,7 @@ describe("schedule.ts run eod-nudge", () => {
     const { stdout, exitCode } = runSchedule(["run", "eod-nudge", "2026-06-12"], { workDir: tmp });
     expect(exitCode).toBe(0);
     expect(stdout).toContain("No EOD file for 2026-06-12");
-    expect(stdout).toContain("bun tools/EodCrossing.ts --save");
+    expect(stdout).toContain("bun tools/EodSummary.ts --save");
   });
 
   test("silent when EOD file exists", () => {

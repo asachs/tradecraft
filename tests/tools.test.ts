@@ -135,9 +135,9 @@ describe("WeeklyReport", () => {
   });
 });
 
-describe("EodCrossing", () => {
+describe("EodSummary", () => {
   test("produces 1-6 prefixed lines", () => {
-    const { stdout, exitCode } = runTool("EodCrossing.ts", ["--date", "2026-06-03"]);
+    const { stdout, exitCode } = runTool("EodSummary.ts", ["--date", "2026-06-03"]);
     expect(exitCode).toBe(0);
     const contentLines = stdout
       .split("\n")
@@ -147,7 +147,7 @@ describe("EodCrossing", () => {
   });
 
   test("every content line starts with a valid prefix", () => {
-    const { stdout } = runTool("EodCrossing.ts", ["--date", "2026-06-03"]);
+    const { stdout } = runTool("EodSummary.ts", ["--date", "2026-06-03"]);
     const validPrefixes = ["done:", "decided:", "promised:", "learned:", "met:", "blocked:"];
     const contentLines = stdout
       .split("\n")
@@ -163,21 +163,21 @@ describe("EodCrossing", () => {
   });
 
   test("ends with a review reminder", () => {
-    const { stdout } = runTool("EodCrossing.ts", ["--date", "2026-06-03"]);
+    const { stdout } = runTool("EodSummary.ts", ["--date", "2026-06-03"]);
     expect(stdout.toLowerCase()).toContain("review");
   });
 
   test("includes promised: for promises due today", () => {
     // OPS-104 is due 2026-06-03 but renegotiated, OPS-101 due 06-05
     // No open promise due on 06-03 in fixture, so test with 06-05
-    const { stdout } = runTool("EodCrossing.ts", ["--date", "2026-06-05"]);
+    const { stdout } = runTool("EodSummary.ts", ["--date", "2026-06-05"]);
     // OPS-101 is due 06-05 but status=done, so no promised: line
     // Check that done: lines appear from activity
     expect(stdout).toContain("done:");
   });
 
   test("done: lines carry clickable commit links when repos.json maps the repo", () => {
-    const { stdout } = runTool("EodCrossing.ts", ["--date", "2026-06-03"]);
+    const { stdout } = runTool("EodSummary.ts", ["--date", "2026-06-03"]);
     expect(stdout).toMatch(
       /done: api-gateway\/[^\n]*\[`[0-9a-f]{7,40}`\]\(https:\/\/github\.com\/example-org\/api-gateway\/commit\//
     );
@@ -188,7 +188,7 @@ describe("EodCrossing", () => {
     try {
       // Remove existing eod files so --save can create for 2026-06-03
       rmSync(resolve(tmp, "worklog/eod"), { recursive: true, force: true });
-      const { stdout, exitCode } = runTool("EodCrossing.ts", ["--date", "2026-06-03", "--save"], { workDir: tmp });
+      const { stdout, exitCode } = runTool("EodSummary.ts", ["--date", "2026-06-03", "--save"], { workDir: tmp });
       expect(exitCode).toBe(0);
       expect(stdout).toContain("saved:");
       const savedPath = resolve(tmp, "worklog/eod/2026-06-03.md");
@@ -204,7 +204,7 @@ describe("EodCrossing", () => {
     const tmp = makeTempFixtureCopy();
     try {
       // 2026-06-02.md already exists in fixture
-      const { stderr, exitCode } = runTool("EodCrossing.ts", ["--date", "2026-06-02", "--save"], { workDir: tmp });
+      const { stderr, exitCode } = runTool("EodSummary.ts", ["--date", "2026-06-02", "--save"], { workDir: tmp });
       expect(exitCode).toBe(1);
       expect(stderr).toContain("refusing to overwrite");
       // Verify original file unchanged
@@ -221,7 +221,7 @@ describe("EodCrossing", () => {
     try {
       const outPath = resolve(tmp, "test-out.md");
       const { exitCode, stderr } = runTool(
-        "EodCrossing.ts",
+        "EodSummary.ts",
         ["--date", "2026-06-03", "--save", "--out", outPath],
         { workDir: tmp }
       );
