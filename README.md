@@ -4,6 +4,8 @@
 
 Portable Claude Code working patterns for a corporate environment. **Patterns only — no personal data, no employer data.** This repo is pre-existing personal methodology, authored on personal equipment, consumed read-only by work machines.
 
+> **New here?** [CONCEPTS.md](CONCEPTS.md) explains the idea behind Tradecraft — the ISA, the capture discipline, and how the record compounds into review-ready evidence. This README is the tool reference.
+
 ## What this is
 
 A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM:
