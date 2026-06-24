@@ -2,3 +2,6 @@
 company.md
 *.local.md
 .env
+
+# Stray local artifacts
+.ccgram-uploads/

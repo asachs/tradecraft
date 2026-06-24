@@ -1,10 +1,12 @@
-# claude-work-scaffold
+# Tradecraft
+
+*Do the work well, and keep the record that proves it.*
 
 Portable Claude Code working patterns for a corporate environment. **Patterns only — no personal data, no employer data.** This repo is pre-existing personal methodology, authored on personal equipment, consumed read-only by work machines.
 
 ## What this is
 
-A starter kit for running a disciplined Claude Code "work brain" on a corporate laptop or VM:
+A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM:
 
 - **CLAUDE.md** — work-profile instructions: operational rules, the confidentiality membrane, capture conventions
 - **templates/** — ISA (definition-of-done) template, decision log, promise ledger, brag document

@@ -29,8 +29,8 @@ Read these for domain context (all optional, degrade gracefully when missing):
 
 | Path | Content |
 |------|---------|
-| `~/src/claude-work-scaffold/CLAUDE.md` | Scaffold operational rules + membrane |
-| `~/src/claude-work-scaffold/company.md` | Employer-specific context (gitignored) |
+| `~/src/tradecraft/CLAUDE.md` | Scaffold operational rules + membrane |
+| `~/src/tradecraft/company.md` | Employer-specific context (gitignored) |
 | `~/work/WORK_LEDGER.md` | Active promises |
 | `~/work/initiatives/` | Active ISAs |
 | `~/work/worklog/activity.jsonl` | Session activity log |
@@ -44,10 +44,10 @@ The Algorithm's Learning Router (LEARN phase) references personal surfaces that 
 | TYPE | Personal surface (DON'T USE) | Work surface |
 |------|------------------------------|-------------|
 | `knowledge` | `MEMORY/KNOWLEDGE/` | `MEMORY/LEARNING/` (work learnings only) |
-| `rule` | `CLAUDE.md` Operational Rules | `~/src/claude-work-scaffold/CLAUDE.md` — propose, don't write |
+| `rule` | `CLAUDE.md` Operational Rules | `~/src/tradecraft/CLAUDE.md` — propose, don't write |
 | `gotcha` | Skill `SKILL.md` Gotchas | Same (skills are present on work machine) |
 | `state` | `USER/PROJECTS/PROJECTS.md` | `~/work/initiatives/` — update the relevant ISA |
-| `business` | `USER/BUSINESS/<topic>.md` | `~/src/claude-work-scaffold/company.md` — propose, don't write |
+| `business` | `USER/BUSINESS/<topic>.md` | `~/src/tradecraft/company.md` — propose, don't write |
 | `identity` | `USER/PRINCIPAL_IDENTITY.md` | `PAI/USER/WORK_IDENTITY.md` — surface to user |
 | `doctrine` | Algorithm version file | Surface to user (don't modify Algorithm on work machine) |
 | `hook` | `hooks/*.hook.ts` | Surface to user |
