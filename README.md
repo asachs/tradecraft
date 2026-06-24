@@ -24,15 +24,15 @@ A starter kit for running a disciplined Claude Code work brain on a corporate la
 
 ```bash
 git clone <this-repo> ~/src/tradecraft
-mkdir -p ~/work/{worklog,decisions,initiatives}
-cp ~/src/tradecraft/CLAUDE.md ~/.claude/CLAUDE.md          # or merge into existing
-cp ~/src/tradecraft/templates/WORK_LEDGER.md ~/work/
-cp ~/src/tradecraft/templates/BRAG.md ~/work/
-# Hook install: merge hooks/settings-snippet.json into ~/.claude/settings.json
-# and copy hooks/SessionActivityLog.hook.ts to ~/.claude/hooks/
+cd ~/src/tradecraft
+bun tools/install.ts          # --dry-run to preview · --force to overwrite · WORK_DIR=… to relocate
 ```
 
+`install.ts` is idempotent. It creates `~/work/{worklog,initiatives,reports}`, seeds `WORK_LEDGER.md` and `BRAG.md`, installs the work-profile `CLAUDE.md` and the `SessionActivityLog` hook into `~/.claude/`, and merges the hook into `settings.json` (backing up any existing file). Re-runs skip what's already there, and it never silently overwrites an existing `~/.claude/CLAUDE.md` — it tells you to merge by hand or pass `--force`.
+
 Then start `claude` (ideally inside tmux on an always-on host) and work normally. The activity log accumulates; run the workflows on Friday.
+
+> Running full PAI on the work machine instead of vanilla Claude Code? Use `bootstrap-work-profile.ts` with a PAI archive — it installs the PAI work profile (identity files, memory dirs) on top of this kit.
 
 ## Report engine
 
