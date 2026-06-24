@@ -203,5 +203,5 @@ if (existsSync(verifyScript)) {
 console.log("\n--- Bootstrap complete ---");
 console.log("Next steps:");
 console.log("  1. Edit ~/.claude/PAI/USER/WORK_IDENTITY.md with your details");
-console.log("  2. Populate ~/src/claude-work-scaffold/company.md after weeks 1-2");
+console.log("  2. Populate ~/src/tradecraft/company.md after weeks 1-2");
 console.log("  3. Start claude and verify with: 'What do you know about my personal life?'");

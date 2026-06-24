@@ -1,4 +1,6 @@
-# Work Brain — Claude Code work profile
+# Tradecraft — Claude Code work profile
+
+*The craft of doing the work, and the discipline of recording it.*
 
 Instructions for Claude Code running on WORK infrastructure (corporate laptop or VM, company account). This file is generic methodology — add a `company.md` locally (gitignored everywhere) for employer-specific context.
 

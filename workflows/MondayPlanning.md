@@ -7,7 +7,7 @@ A 15-minute Monday prompt to set the week's direction. Run at the start of each 
 - `bun tools/MondayPlan.ts` output (promises, overdue, initiatives, lead measures)
 - Previous week's `~/work/reports/weekly-report/` (if it exists)
 - `~/work/initiatives/` — active ISAs for status check
-- `~/src/claude-work-scaffold/company.md` — manager profile for tone calibration
+- `~/src/tradecraft/company.md` — manager profile for tone calibration
 
 ## Instructions
 
