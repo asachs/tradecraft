@@ -1,12 +1,11 @@
 [
-  "example.com",
-  "owner@example.com",
+  "yourdomain.example",
+  "you@yourdomain.example",
   "linkedin.com/in/your-handle",
-  "revelation.space",
-  "alistair.reynolds",
-  "digital.vault",
-  "cloudafrica",
-  "localhost:31337",
-  "elevenlabs",
-  "t.me/"
+  "your-personal-project.example",
+  "your-project-codename",
+  "your-former-employer",
+  "your-personal-host:port",
+  "your-voice-service",
+  "your-chat-service"
 ]

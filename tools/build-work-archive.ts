@@ -66,12 +66,17 @@ const HOOK_COPY_DIRS = ["lib", "security"];
 
 /**
  * Work-mode identity patterns for ContainmentGuard.
- * These replace the upstream patterns (which are the open-source maintainer's)
- * so the guard protects the actual user's identity on the work machine.
- * Loaded from templates/containment-patterns-work.json if it exists.
+ * These replace the upstream patterns so the guard protects the actual user's
+ * identity on the work machine. Real patterns are personal by nature, so they
+ * live in a gitignored local file; the committed .json holds generic examples.
+ * Resolution: containment-patterns-work.local.json (your real strings, gitignored)
+ *   → containment-patterns-work.json (committed example placeholders).
  */
 const SCAFFOLD_DIR = resolve(join(import.meta.dir, ".."));
-const WORK_PATTERNS_PATH = join(SCAFFOLD_DIR, "templates", "containment-patterns-work.json");
+const WORK_PATTERNS_LOCAL = join(SCAFFOLD_DIR, "templates", "containment-patterns-work.local.json");
+const WORK_PATTERNS_EXAMPLE = join(SCAFFOLD_DIR, "templates", "containment-patterns-work.json");
+const usingLocalPatterns = existsSync(WORK_PATTERNS_LOCAL);
+const WORK_PATTERNS_PATH = usingLocalPatterns ? WORK_PATTERNS_LOCAL : WORK_PATTERNS_EXAMPLE;
 
 // ── Args ──
 
@@ -258,12 +263,19 @@ try {
       );
       writeFileSync(guardPath, guardContent);
       console.log("  patched: ContainmentGuard.hook.ts with work-mode identity patterns");
+      if (!usingLocalPatterns) {
+        console.error(
+          "  warning: using example placeholder patterns — create " +
+          "templates/containment-patterns-work.local.json with your real identity strings " +
+          "(it is gitignored) so the guard actually protects you"
+        );
+      }
     } catch (err) {
       console.error(`  warning: failed to patch ContainmentGuard: ${err}`);
     }
   } else if (!existsSync(WORK_PATTERNS_PATH)) {
     console.error(
-      "  warning: templates/containment-patterns-work.json not found — " +
+      "  warning: no containment patterns found — " +
       "ContainmentGuard will use upstream identity patterns"
     );
   }
