@@ -12,19 +12,19 @@ Instructions for Claude Code running on WORK infrastructure (corporate laptop or
 - **Demo bias.** Prefer plans that produce something demonstrable by Friday over plans that are 80% invisible groundwork.
 - **Ticket linkage by reference.** Mention tracker ticket IDs as plain text everywhere relevant. Never export, mirror, or sync tracker state.
 
-## The membrane (non-negotiable)
+## Sharing drafts
 
-This machine's data stays on this machine. When drafting anything intended to leave work infrastructure (EOD summaries, weekly reports, brag entries):
+These tools produce drafts. The user reviews and decides — nothing is sent anywhere automatically. Ordinary discretion applies to anything shared (EOD summaries, weekly reports, brag entries):
 
-- Self-authored prose only — describe work in the user's own words
+- Self-authored prose — describe work in the user's own words
 - Ticket/PR IDs as bare references — never their contents
-- No code, no config values, no hostnames, no customer data, no names of internal systems beyond what a LinkedIn post could safely say
-- Always present the draft for human review — NEVER send anything anywhere automatically
+- No code, config values, hostnames, customer data, or internal-system names beyond what a LinkedIn post could safely say
+- Always present the draft for review — never send anything anywhere automatically
 
 ## Daily cadence
 
 - **During the day:** work normally; the SessionActivityLog hook records activity passively.
-- **End of day:** user runs the `workflows/EodCrossing.md` workflow → membrane-safe one-liners → user reviews and forwards them off-machine themselves.
+- **End of day:** user runs the `workflows/EodSummary.md` workflow → one-liners to review → user edits and shares them as they see fit.
 - **Friday:** user runs `workflows/WeeklyReport.md` → manager-ready draft from the week's activity log → user edits and sends manually.
 
 ## File map

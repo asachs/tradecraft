@@ -13,11 +13,11 @@ updated: 2026-06-12T23:55:00Z
 
 ## Problem
 
-The scaffold repo has the capture side (SessionActivityLog hook → activity.jsonl) and the prose workflows (EodCrossing.md, WeeklyReport.md), but the workflows are LLM instructions with no deterministic engine underneath. Every report currently requires a Claude session to re-derive structure from raw JSONL — slow, non-reproducible, and untestable. The probation-evidence pipeline needs generators that are proven with synthetic data *before* day one, because the user will not QA them on the job.
+The scaffold repo has the capture side (SessionActivityLog hook → activity.jsonl) and the prose workflows (EodSummary.md, WeeklyReport.md), but the workflows are LLM instructions with no deterministic engine underneath. Every report currently requires a Claude session to re-derive structure from raw JSONL — slow, non-reproducible, and untestable. The probation-evidence pipeline needs generators that are proven with synthetic data *before* day one, because the user will not QA them on the job.
 
 ## Vision
 
-On a Friday afternoon, one command turns a week of passively-captured activity and a promise ledger into a weekly draft the user only has to edit for voice, not assemble. The morning brief and EOD crossing each cost one command and seconds of review. The first time the user runs `bun tools/WeeklyReport.ts` against real work data, the draft reads like something they would have written — structure, references, and promises already in place.
+On a Friday afternoon, one command turns a week of passively-captured activity and a promise ledger into a weekly draft the user only has to edit for voice, not assemble. The morning brief and EOD summary each cost one command and seconds of review. The first time the user runs `bun tools/WeeklyReport.ts` against real work data, the draft reads like something they would have written — structure, references, and promises already in place.
 
 ## Out of Scope
 
@@ -28,12 +28,12 @@ No LLM calls inside the tools — they are deterministic shapers; prose polish s
 - bun + TypeScript only; zero external dependencies beyond bun builtins (repo must run on a fresh corp VM with only bun installed)
 - No network calls of any kind in any tool
 - Tools read only under `WORK_DIR` (env-configurable, default `~/work`) and the repo's own files; write only to stdout or `--out <file>` under `WORK_DIR`
-- Membrane: generated drafts carry ticket refs as bare references; tools never embed file contents, diffs, or commit messages beyond the one-line `last_commit` already captured
+- Discretion: generated drafts carry ticket refs as bare references; tools never embed file contents, diffs, or commit messages beyond the one-line `last_commit` already captured
 - Repo stays employer-agnostic: no company names, internal hostnames, or personal-PAI paths anywhere in code, fixtures, or docs
 
 ## Goal
 
-Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief) plus a shared parsing lib exist in `tools/`, every tool produces correct drafts from a synthetic fixture week, and `bun test` passes a suite that proves date-windowing, ledger parsing, membrane-safety, and output shape — all verified before any real work data exists.
+Four deterministic CLI tools (WeeklyReport, EodSummary, MondayPlan, DailyBrief) plus a shared parsing lib exist in `tools/`, every tool produces correct drafts from a synthetic fixture week, and `bun test` passes a suite that proves date-windowing, ledger parsing, share-safety, and output shape — all verified before any real work data exists.
 
 ## Criteria
 
@@ -58,12 +58,12 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - [x] ISC-14: `--week YYYY-MM-DD` selects the ISO week containing that date; default is the current week
 - [x] ISC-15: Empty activity week produces a graceful draft stating no captured activity, exit code 0
 
-### EodCrossing.ts
+### EodSummary.ts
 
-- [x] ISC-16: `bun tools/EodCrossing.ts` with fixture data prints 1-6 one-liners, each starting with one of done:/decided:/promised:/learned:/met:/blocked:
+- [x] ISC-16: `bun tools/EodSummary.ts` with fixture data prints 1-6 one-liners, each starting with one of done:/decided:/promised:/learned:/met:/blocked:
 - [x] ISC-17: EOD output derives `done:` suggestions from today's activity entries (repo, branch, last_commit one-liner)
 - [x] ISC-18: EOD output includes `promised:` lines for ledger promises created or due today
-- [x] ISC-19: EOD output ends with a review reminder line instructing the human to edit before carrying anything off-machine
+- [x] ISC-19: EOD output ends with a review reminder line instructing the human to edit before sharing
 - [x] ISC-20: `--date YYYY-MM-DD` overrides "today" for the EOD window
 
 ### MondayPlan.ts
@@ -93,7 +93,7 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - [x] ISC-34: Anti: no tool writes any file unless `--out` is given; running all four tools against fixtures leaves the filesystem unchanged (stdout only)
 - [x] ISC-35: Anti: `rg -i "payroc|worldnet|sachs|asachs|/Users/" tools/ tests/` returns zero matches — repo stays employer- and person-agnostic
 - [x] ISC-36: Anti: `rg "fetch\(|XMLHttpRequest|net\.|http\." tools/` returns zero network-call matches
-- [x] ISC-37: README.md documents the four tools, WORK_DIR config, and the membrane rule (draft → human review → manual send)
+- [x] ISC-37: README.md documents the four tools, WORK_DIR config, and the review-before-sharing rule (draft → human review → manual send)
 - [x] ISC-38: Repo committed and pushed with tools, tests, fixtures; `bun test` output captured in Verification
 
 ### Tone iteration (2026-06-12, Andre review)
@@ -106,8 +106,8 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 
 - [x] ISC-42: `tools/lib/eod.ts` parses `WORK_DIR/worklog/eod/YYYY-MM-DD.md` files into typed prefixed lines (done/decided/promised/learned/met/blocked); missing dir or no files → empty result, no crash
 - [x] ISC-43: `tools/lib/eod.ts` filters EOD files by [start, end) window using the filename date
-- [x] ISC-44: `EodCrossing.ts --save` writes the draft to `WORK_DIR/worklog/eod/<date>.md` and prints the saved path for the human to edit in place
-- [x] ISC-45: `EodCrossing.ts --save` refuses to overwrite an existing EOD file (human edits are sacred), exits non-zero with a clear message
+- [x] ISC-44: `EodSummary.ts --save` writes the draft to `WORK_DIR/worklog/eod/<date>.md` and prints the saved path for the human to edit in place
+- [x] ISC-45: `EodSummary.ts --save` refuses to overwrite an existing EOD file (human edits are sacred), exits non-zero with a clear message
 - [x] ISC-46: WeeklyReport Shipped leads with reviewed `done:` lines from the week's EOD files (prefix stripped) before ledger items
 - [x] ISC-47: WeeklyReport demotes the commit themes to an `Evidence` sub-block at the end of Shipped
 - [x] ISC-48: WeeklyReport Decisions section is populated from `decided:` EOD lines; fill-comment fallback when none exist
@@ -138,7 +138,7 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 |-----|------|-------|-----------|------|
 | ISC-1..9 | unit | lib functions against fixture inputs | all assertions pass | bun test |
 | ISC-10..15 | e2e | WeeklyReport stdout against fixture week | sections + content present | Bash + bun test |
-| ISC-16..20 | e2e | EodCrossing stdout against fixture day | prefix grammar + count 1-6 | Bash + bun test |
+| ISC-16..20 | e2e | EodSummary stdout against fixture day | prefix grammar + count 1-6 | Bash + bun test |
 | ISC-21..24 | e2e | MondayPlan stdout | blocks present | Bash + bun test |
 | ISC-25..27 | e2e | DailyBrief stdout incl. Monday case | working-day logic correct | bun test |
 | ISC-28 | fixture | fixture files exist with required variety | counts met | Read/Bash |
@@ -160,12 +160,12 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 | shared-lib | activity/ledger/dates/config parsers | ISC-1..9 | — | false |
 | fixtures | synthetic week + ledger + initiative | ISC-28 | — | true |
 | weekly-report | WeeklyReport.ts CLI | ISC-10..15 | shared-lib, fixtures | true |
-| eod-crossing | EodCrossing.ts CLI | ISC-16..20 | shared-lib, fixtures | true |
+| eod-summary | EodSummary.ts CLI | ISC-16..20 | shared-lib, fixtures | true |
 | monday-plan | MondayPlan.ts CLI | ISC-21..24 | shared-lib, fixtures | true |
 | daily-brief | DailyBrief.ts CLI | ISC-25..27 | shared-lib, fixtures | true |
 | test-suite | unit + e2e tests | ISC-29..33 | all above | false |
 | hygiene-docs | anti-sweeps, README, push | ISC-34..38 | all above | false |
-| eod-persistence | eod.ts parser + EodCrossing --save | ISC-42..45 | shared-lib | false |
+| eod-persistence | eod.ts parser + EodSummary --save | ISC-42..45 | shared-lib | false |
 | impact-inversion | WeeklyReport claim→outcome→evidence restructure + ticket labels | ISC-46..50, ISC-53 | eod-persistence | false |
 | impact-fixtures-tests | EOD fixtures + new test coverage | ISC-51, ISC-52 | impact-inversion | false |
 | brag-tag-parse | eod.ts strips [BRAG?] and exposes brag flag | ISC-54, ISC-55, ISC-62 | eod-persistence | false |
@@ -182,18 +182,20 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - 2026-06-12: Impact inversion (Andre: "anyone can generate a change log"). Every impact sentence must have a human author — the engine cannot fabricate impact, it can only *order* what humans wrote. New ordering: reviewed EOD `done:` claims → ledger outcomes → commit Evidence appendix. The EOD save-review loop (`--save`, refuse-overwrite) makes the human-authoring moment cheap; ISC-53 guarantees the system degrades gracefully when the habit lapses — the EOD ritual is leverage, not load-bearing.
 - 2026-06-12: Impact-inversion build again single-writer (Forge, agent a51dad78) — WeeklyReport.ts is touched by every feature in this batch; parallel writers would collide on the same file. Show-your-math accepted for the delegation floor.
 
-- 2026-06-12: Andre: "make commit ids clickable everywhere." `linkifyCommit` promoted to shared `tools/lib/links.ts`; DailyBrief and EodCrossing now link shas via repos.json (DailyBrief also switched from `;`-joins to nested lists per earlier feedback). EOD `done:` links survive into the saved file — acceptable: the human review step is the membrane gate, and repos.json is user-configured local data. Commit `808cfb6`, 66 tests green.
+- 2026-06-12: Andre: "make commit ids clickable everywhere." `linkifyCommit` promoted to shared `tools/lib/links.ts`; DailyBrief and EodSummary now link shas via repos.json (DailyBrief also switched from `;`-joins to nested lists per earlier feedback). EOD `done:` links survive into the saved file — acceptable: the human review step is the gate, and repos.json is user-configured local data. Commit `808cfb6`, 66 tests green.
 - 2026-06-12: BragHarvest (single-writer, no Forge — E2 task, show-your-math: one small tool on existing libs, every file on one dependency line; a second writer serializes anyway). [BRAG?] harvest covers ALL prefixes, not just done: — brag-worthiness is the human's call at tag time, not inferred from the prefix. Idempotency keyed on exact entry-heading match: heading derives from the stable EOD line; if the human later edits the EOD line, a re-run creates a visible second stub (stdout reports it) — the human owns BRAG.md. "Why it mattered" is structurally always a fill-comment (ISC-65): impact-authorship doctrine extended from the weekly to the brag doc.
 
 ## Changelog
 
 - 2026-06-12 — conjectured: commit themes grouped by repo/branch make an adequate Shipped headline for a manager-ready weekly report. refuted by: Andre's review — "the weekly report is a list of effort, not very well aligned on impact of the changes. Anyone can generate a change log." learned: impact requires human authorship; a deterministic engine cannot synthesize the "so what" — it can only order human claims above machine evidence, and design the cheapest possible moment (EOD save-review) for the human to author the claim. criterion now: ISC-46..53 (reviewed done: lines headline Shipped; commits demoted to Evidence appendix; graceful zero-EOD degradation so the habit is leverage, not load-bearing).
 
+- 2026-06-24 — conjectured: a "membrane" with work artifacts "crossing" outward to a personal zone is the right model for what leaves the machine. refuted by: Andre — this install is work-only; there is no second zone for a membrane to sit between. The two-zone model was a ghost of the abandoned work↔personal bridge (the same assumption removed from the Pulse mirror jobs). learned: it is a work drafting tool — "review before sharing" plus ordinary discretion covers it. Renamed EodCrossing → EodSummary across tools, tests, workflows, schedule, and docs to drop the metaphor from the code; suite green.
+
 ## Verification
 
 - ISC-29 (and 1..33 via suite): `bun test` → "41 pass, 0 fail, 73 expect() calls, 4 files [355ms]" — re-run by primary, not just Forge's claim.
 - ISC-10..15: `WORK_DIR=tests/fixtures/work bun tools/WeeklyReport.ts --week 2026-06-03` → five sections present; activity grouped by repo+branch (infra-migration/main, api-gateway/feature/rate-limiting, …); done promises under Shipped; OPS-102/OPS-106 under Next week; OVERDUE flag on OPS-103.
-- ISC-16..20: EodCrossing --date 2026-06-03 → 2 `done:` lines + membrane review reminder; prefix grammar correct.
+- ISC-16..20: EodSummary --date 2026-06-03 → 2 `done:` lines + review reminder; prefix grammar correct.
 - ISC-21..24: MondayPlan --date 2026-06-08 → due-this-week block, "Carried over / overdue" block with OPS-103, sample-initiative listed, Top-3 stub.
 - ISC-25..27: DailyBrief → "Yesterday (2026-05-29)" from Monday 2026-06-01 proves Friday-as-yesterday; overdue OPS-103 listed; e2e tests cover the rest.
 - ISC-34: `git status --porcelain tests/fixtures/` shows only `??` (untracked new fixtures); no files modified by tool runs.
@@ -203,7 +205,7 @@ Four deterministic CLI tools (WeeklyReport, EodCrossing, MondayPlan, DailyBrief)
 - ISC-39..41: `bun test` → "46 pass, 0 fail, 79 expect() calls" after tone iteration; WeeklyReport heading `# Weekly Report — W23 (2026-06-01 to 2026-06-07)`; Shipped renders nested bullets with `[\`a1b2c3d\`](https://github.com/example-org/infra-migration/commit/a1b2c3d) migrate OIDC provider config`; MondayPlan heading `W24 (week of 2026-06-08)`. isoWeekNumber tested across year boundaries (2027-01-01→W53, 2024-12-30→W1).
 - ISC-38: commit `7d0a36d` "Add report engine: four generators, shared lib, fixture week, 41 tests" — 17 files, 1300 insertions — pushed to origin/master (`c1ea314..7d0a36d`). `bun test`: "41 pass, 0 fail, 73 expect() calls".
 - ISC-42..43: `tests/eod.test.ts` (9 tests) — parseEodFiles handles all six prefixes, skips blanks/HTML comments/unparseable lines, missing dir → []; filterEodByWindow [start,end) on filename date. Suite green.
-- ISC-44: `WORK_DIR=$(mktemp -d) bun tools/EodCrossing.ts --save --date 2026-06-03` → "saved: …/worklog/eod/2026-06-03.md" + edit-in-place reminder, exit 0 (run by primary).
+- ISC-44: `WORK_DIR=$(mktemp -d) bun tools/EodSummary.ts --save --date 2026-06-03` → "saved: …/worklog/eod/2026-06-03.md" + edit-in-place reminder, exit 0 (run by primary).
 - ISC-45: second `--save` against same WORK_DIR → "refusing to overwrite … human edits are sacred", exit 1 (run by primary).
 - ISC-46..50: `WORK_DIR=tests/fixtures/work bun tools/WeeklyReport.ts --week 2026-06-03` (primary) → Shipped leads with two human `done:` lines (OIDC staging cutover, production cutover), then 2 ledger items, then `- **Evidence** (activity log)` appendix with `**OPS-103** — api-gateway/feature/OPS-103-rate-limiting` ticket label and linkified shas; Decisions shows token-bucket `decided:` line; Blocked shows load-test access `blocked:` line.
 - ISC-51: `tests/fixtures/work/worklog/eod/2026-06-02.md` (done+decided) and `2026-06-05.md` (done+blocked) exist; branch `feature/OPS-103-rate-limiting` carries the ticket ref.

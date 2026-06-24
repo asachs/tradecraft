@@ -80,7 +80,7 @@ const JOBS: Record<string, Job> = {
   "eod-nudge": {
     name: "eod-nudge",
     schedule: "Mon–Fri 17:00",
-    description: "Reminder if EOD crossing not done",
+    description: "Reminder if EOD summary not done",
     calendar: [
       { Weekday: 1, Hour: 17, Minute: 0 },
       { Weekday: 2, Hour: 17, Minute: 0 },
@@ -216,8 +216,8 @@ function runEodNudge(today: string): { notified: string } | null {
   const eodFile = join(WORK_DIR, "worklog", "eod", `${today}.md`);
   if (existsSync(eodFile)) return null; // Already done — no notification
 
-  const msg = `No EOD file for ${today} — run: bun tools/EodCrossing.ts --save`;
-  notify("EOD Crossing", msg);
+  const msg = `No EOD file for ${today} — run: bun tools/EodSummary.ts --save`;
+  notify("EOD Summary", msg);
   return { notified: msg };
 }
 

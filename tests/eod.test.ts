@@ -48,7 +48,7 @@ describe("parseEodFiles", () => {
 
   test("skips HTML comments", () => {
     const lines = parseEodFiles(fixtureDir);
-    const hasComment = lines.some((l) => l.text.includes("Review:") || l.text.includes("Membrane"));
+    const hasComment = lines.some((l) => l.text.includes("Review:") || l.text.includes("<!--"));
     expect(hasComment).toBe(false);
   });
 
