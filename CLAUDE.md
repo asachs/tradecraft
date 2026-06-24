@@ -18,7 +18,7 @@ These tools produce drafts. The user reviews and decides — nothing is sent any
 
 - Self-authored prose — describe work in the user's own words
 - Ticket/PR IDs as bare references — never their contents
-- No code, config values, hostnames, customer data, or internal-system names beyond what a LinkedIn post could safely say
+- No code, config values, hostnames, customer data, or internal-system names beyond what's safe to share outside the company
 - Always present the draft for review — never send anything anywhere automatically
 
 ## Daily cadence
