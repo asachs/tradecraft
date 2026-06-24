@@ -91,7 +91,7 @@ Four deterministic CLI tools (WeeklyReport, EodSummary, MondayPlan, DailyBrief) 
 ### Anti-criteria & hygiene
 
 - [x] ISC-34: Anti: no tool writes any file unless `--out` is given; running all four tools against fixtures leaves the filesystem unchanged (stdout only)
-- [x] ISC-35: Anti: `rg -i "payroc|worldnet|sachs|asachs|/Users/" tools/ tests/` returns zero matches — repo stays employer- and person-agnostic
+- [x] ISC-35: `bun tools/verify-clean.ts` scans every git-tracked file (whole repo, not just tools/ + tests/) and exits zero — no employer or personal identity strings ship in the repo. Forbidden patterns are defined in verify-clean.ts and enforced by tests/verify-clean.test.ts
 - [x] ISC-36: Anti: `rg "fetch\(|XMLHttpRequest|net\.|http\." tools/` returns zero network-call matches
 - [x] ISC-37: README.md documents the four tools, WORK_DIR config, and the review-before-sharing rule (draft → human review → manual send)
 - [x] ISC-38: Repo committed and pushed with tools, tests, fixtures; `bun test` output captured in Verification
@@ -191,6 +191,8 @@ Four deterministic CLI tools (WeeklyReport, EodSummary, MondayPlan, DailyBrief) 
 
 - 2026-06-24 — conjectured: a "membrane" with work artifacts "crossing" outward to a personal zone is the right model for what leaves the machine. refuted by: Andre — this install is work-only; there is no second zone for a membrane to sit between. The two-zone model was a ghost of the abandoned work↔personal bridge (the same assumption removed from the Pulse mirror jobs). learned: it is a work drafting tool — "review before sharing" plus ordinary discretion covers it. Renamed EodCrossing → EodSummary across tools, tests, workflows, schedule, and docs to drop the metaphor from the code; suite green.
 
+- 2026-06-24 — ISC-35 widened from a manual `rg` over `tools/ tests/` to `tools/verify-clean.ts`: a whole-repo, git-tracked-file scan enforced by `tests/verify-clean.test.ts`. The narrow original scope is exactly why personal data sat undetected in `templates/containment-patterns-work.json`. Forbidden patterns now live only in verify-clean.ts (single source of truth) and the ISA no longer inlines them, so the repo stops matching its own criterion; scrubbed a stray employer name from Plans/ to make the widened scan pass.
+
 ## Verification
 
 - ISC-29 (and 1..33 via suite): `bun test` → "41 pass, 0 fail, 73 expect() calls, 4 files [355ms]" — re-run by primary, not just Forge's claim.
@@ -199,7 +201,7 @@ Four deterministic CLI tools (WeeklyReport, EodSummary, MondayPlan, DailyBrief) 
 - ISC-21..24: MondayPlan --date 2026-06-08 → due-this-week block, "Carried over / overdue" block with OPS-103, sample-initiative listed, Top-3 stub.
 - ISC-25..27: DailyBrief → "Yesterday (2026-05-29)" from Monday 2026-06-01 proves Friday-as-yesterday; overdue OPS-103 listed; e2e tests cover the rest.
 - ISC-34: `git status --porcelain tests/fixtures/` shows only `??` (untracked new fixtures); no files modified by tool runs.
-- ISC-35: `rg -il "payroc|worldnet|sachs|asachs|/Users/" tools/ tests/ | wc -l` → 0.
+- ISC-35: `bun tools/verify-clean.ts` → "N tracked files scanned — no identity/employer strings found", exit 0; whole-repo scope enforced by tests/verify-clean.test.ts (mechanism + live repo scan).
 - ISC-36: `rg -l 'fetch\(|XMLHttpRequest|net\.|http\.' tools/ | wc -l` → 0.
 - ISC-37: README "Report engine" section added (Forge); content confirmed in diff review at commit.
 - ISC-39..41: `bun test` → "46 pass, 0 fail, 79 expect() calls" after tone iteration; WeeklyReport heading `# Weekly Report — W23 (2026-06-01 to 2026-06-07)`; Shipped renders nested bullets with `[\`a1b2c3d\`](https://github.com/example-org/infra-migration/commit/a1b2c3d) migrate OIDC provider config`; MondayPlan heading `W24 (week of 2026-06-08)`. isoWeekNumber tested across year boundaries (2027-01-01→W53, 2024-12-30→W1).

@@ -42,7 +42,7 @@ Check whether any work-safe hooks import from `hooks/handlers/`. If so, include 
 - Move RepeatDetection and ISASync from `PostResponse` to `Stop` (alongside SessionActivityLog)
 
 **F10: Relax Bash permissions.**
-Replace the restrictive whitelist (`Bash(bun test*)`, `Bash(git *)`, etc.) with just `"Bash"` — same as the personal settings. A Principal DevOps Engineer needs `kubectl`, `docker`, `terraform`, `ssh`, `make`, `curl`, and whatever else Payroc uses. The deny list still blocks personal service calls. Alternatively, keep it as a broader pattern: `Bash(*)`.
+Replace the restrictive whitelist (`Bash(bun test*)`, `Bash(git *)`, etc.) with just `"Bash"` — same as the personal settings. A Principal DevOps Engineer needs `kubectl`, `docker`, `terraform`, `ssh`, `make`, `curl`, and whatever else the employer uses. The deny list still blocks personal service calls. Alternatively, keep it as a broader pattern: `Bash(*)`.
 
 **F13: Fix deny patterns.**
 `Bash(curl *elevenlabs*)` won't match `curl -H "..." https://api.elevenlabs.io/...` because flags appear between `curl` and the domain. Change to `Bash(*elevenlabs*)`, `Bash(*telegram*)`, `Bash(*pulse*)` to match the domain anywhere in the command string.
