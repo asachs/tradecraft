@@ -23,11 +23,11 @@ A starter kit for running a disciplined Claude Code work brain on a corporate la
 ## Bootstrap on a fresh work machine/VM
 
 ```bash
-git clone <this-repo> ~/work-scaffold
+git clone <this-repo> ~/src/tradecraft
 mkdir -p ~/work/{worklog,decisions,initiatives}
-cp ~/work-scaffold/CLAUDE.md ~/.claude/CLAUDE.md          # or merge into existing
-cp ~/work-scaffold/templates/WORK_LEDGER.md ~/work/
-cp ~/work-scaffold/templates/BRAG.md ~/work/
+cp ~/src/tradecraft/CLAUDE.md ~/.claude/CLAUDE.md          # or merge into existing
+cp ~/src/tradecraft/templates/WORK_LEDGER.md ~/work/
+cp ~/src/tradecraft/templates/BRAG.md ~/work/
 # Hook install: merge hooks/settings-snippet.json into ~/.claude/settings.json
 # and copy hooks/SessionActivityLog.hook.ts to ~/.claude/hooks/
 ```

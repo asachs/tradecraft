@@ -28,7 +28,7 @@ const SCAFFOLD_DIR = resolve(dirname(import.meta.path), "..");
 const TOOLS_DIR = join(SCAFFOLD_DIR, "tools");
 const REPORTS_DIR = join(WORK_DIR, "reports");
 const LAUNCH_AGENTS = join(homedir(), "Library", "LaunchAgents");
-const PLIST_PREFIX = "com.work-scaffold.";
+const PLIST_PREFIX = "com.tradecraft.";
 const SERVE_PORT = process.env.SERVE_PORT ?? "3141";
 
 // ── Job definitions ──
@@ -312,7 +312,7 @@ function uninstall(): void {
     unlinkSync(path);
     console.log(`  removed ${jobName}`);
   }
-  console.log("\nAll work-scaffold jobs uninstalled.");
+  console.log("\nAll tradecraft jobs uninstalled.");
 }
 
 function status(): void {
