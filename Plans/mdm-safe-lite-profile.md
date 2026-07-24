@@ -34,6 +34,7 @@ A single additive installer (`install-lite.ts`) plus one `SessionStart` hook (`W
 - 2026-07-24: Hooks referenced at their repo path, not copied into `~/.claude/hooks/`. Lets `WorkBrief` import `tools/lib/*` (no logic duplication) and keeps the install footprint additive and upstream canonical.
 - 2026-07-24: Hook surfaces and writes only the `.pending` marker; it does NOT auto-generate reports on session start. Silent file writes on a managed machine are exactly the surprising side effect to avoid; the brief prints the catch-up command instead. Honors `DA_IDENTITY_WORK.md:34` ("ask before creating files / touching services").
 - 2026-07-24: `CLAUDE.md` layered via `@import` append, never overwrite — the org-policy file stays canonical (it is user-owned, so the append is durable).
+- 2026-07-24 (fix): hook commands must invoke bun by ABSOLUTE path, not bare `bun`. First restart after install produced no `.pending`/`activity.jsonl`: Claude Code runs hooks under a minimal PATH (GUI-launched app has no `/opt/homebrew/bin`), so bare `bun` was not found and `|| true` swallowed it silently. `buildLiteSnippet` now bakes in `process.execPath` (matches the working `statusLine`, which already used an absolute bun path). Verified by running the live command under `env -i`.
 
 ## Verification
 

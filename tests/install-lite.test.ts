@@ -29,14 +29,16 @@ afterEach(() => {
 });
 
 describe("buildLiteSnippet", () => {
-  test("hook commands reference the repo path and self-guard", () => {
-    const snip = buildLiteSnippet("/repo") as any;
+  test("hook commands reference the repo path, an absolute bun, and self-guard", () => {
+    const snip = buildLiteSnippet("/repo", "/opt/homebrew/bin/bun") as any;
     const cmd = snip.hooks.SessionStart[0].hooks[0].command;
-    expect(cmd).toBe('[ -f "/repo/hooks/WorkBrief.hook.ts" ] && bun "/repo/hooks/WorkBrief.hook.ts" || true');
+    expect(cmd).toBe('[ -f "/repo/hooks/WorkBrief.hook.ts" ] && "/opt/homebrew/bin/bun" "/repo/hooks/WorkBrief.hook.ts" || true');
+    // Must NOT use bare `bun` — hooks run under a minimal PATH without Homebrew.
+    expect(cmd).not.toMatch(/&& bun /);
   });
 
   test("grants scoped Bash, never a blanket allow, and denies osascript", () => {
-    const snip = buildLiteSnippet("/repo") as any;
+    const snip = buildLiteSnippet("/repo", "/opt/homebrew/bin/bun") as any;
     expect(snip.permissions.allow).toEqual(["Bash(git *)", "Bash(bun *)"]);
     expect(snip.permissions.allow).not.toContain("Bash");
     expect(snip.permissions.deny).toContain("Bash(osascript *)");

@@ -37,6 +37,10 @@ export interface LiteInstallOptions {
   workDir: string;
   force: boolean;
   dryRun: boolean;
+  /** Absolute path to the bun binary baked into hook commands. Defaults to the
+   *  bun running this installer (process.execPath). Hooks run under a minimal
+   *  PATH (GUI-launched Claude has no Homebrew dir), so bare `bun` is not found. */
+  bunPath?: string;
   log?: (msg: string) => void;
 }
 
@@ -48,11 +52,13 @@ export interface LiteInstallResult {
 /**
  * Build the settings snippet for the lite profile. Hook commands point at the
  * repo (scaffoldDir) and self-guard so a missing file is a no-op, not an error.
+ * `bunPath` must be ABSOLUTE — hooks run under a minimal PATH where bare `bun`
+ * is not resolvable (same reason the statusLine uses an absolute bun path).
  */
-export function buildLiteSnippet(scaffoldDir: string): Record<string, unknown> {
+export function buildLiteSnippet(scaffoldDir: string, bunPath = "bun"): Record<string, unknown> {
   const guard = (rel: string) => {
     const p = join(scaffoldDir, rel);
-    return `[ -f "${p}" ] && bun "${p}" || true`;
+    return `[ -f "${p}" ] && "${bunPath}" "${p}" || true`;
   };
   return {
     hooks: {
@@ -159,7 +165,7 @@ export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
 
   // [3/4] Merge the lite snippet into settings.json (hooks + scoped perms).
   log("\n[3/4] Merging settings.json (hooks reference the repo; scoped Bash)...");
-  const snippet = buildLiteSnippet(scaffoldDir);
+  const snippet = buildLiteSnippet(scaffoldDir, opts.bunPath ?? process.execPath);
   const settingsDest = join(claudeDir, "settings.json");
   if (!existsSync(settingsDest)) {
     if (!dryRun) {
