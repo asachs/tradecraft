@@ -6,7 +6,7 @@ Instructions for Claude Code running on WORK infrastructure (corporate laptop or
 
 ## Operational rules
 
-- **ISA first.** For any task beyond a one-liner: write `~/work/initiatives/<slug>/ISA.md` from `templates/ISA.md` BEFORE editing code. Goal + verifiable criteria. Done = all criteria checked with evidence.
+- **ISA first.** For any task beyond a one-liner: write `~/work/initiatives/{org,personal}/<slug>/ISA.md` from `templates/ISA.md` BEFORE editing code. Goal + verifiable criteria. Done = all criteria checked with evidence.
 - **Decisions are logged when made.** Any architecture/tooling/approach call with alternatives goes to the initiative's `DECISIONS.md` (template provided) in the same session it was decided.
 - **Promises are ledgered.** When the user commits to deliver something to someone ("I'll get X to Y by Z"), append it to `~/work/WORK_LEDGER.md` immediately.
 - **Demo bias.** Prefer plans that produce something demonstrable by Friday over plans that are 80% invisible groundwork.
@@ -23,6 +23,7 @@ These tools produce drafts. The user reviews and decides — nothing is sent any
 
 ## Daily cadence
 
+- **Start of day:** user runs the `workflows/StartOfDay.md` workflow → checks today's calendar, ensures the daily note exists with yesterday's open items carried forward, and stubs meeting files for today's meetings.
 - **During the day:** work normally; the SessionActivityLog hook records activity passively.
 - **End of day:** user runs the `workflows/EodSummary.md` workflow → one-liners to review → user edits and shares them as they see fit.
 - **Friday:** user runs `workflows/WeeklyReport.md` → manager-ready draft from the week's activity log → user edits and sends manually.
@@ -34,5 +35,5 @@ These tools produce drafts. The user reviews and decides — nothing is sent any
 | `~/work/worklog/activity.jsonl` | Auto-accumulated session activity (hook-written) |
 | `~/work/WORK_LEDGER.md` | Promises made — owner, due date, status |
 | `~/work/BRAG.md` | Dated, evidence-linked accomplishments |
-| `~/work/initiatives/<slug>/ISA.md` | Definition of done per initiative |
-| `~/work/initiatives/<slug>/DECISIONS.md` | Decision log per initiative |
+| `~/work/initiatives/{org,personal}/<slug>/ISA.md` | Definition of done per initiative |
+| `~/work/initiatives/{org,personal}/<slug>/DECISIONS.md` | Decision log per initiative |

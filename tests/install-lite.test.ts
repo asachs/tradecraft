@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, lstatSync, readlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import {
@@ -158,6 +158,37 @@ describe("runInstallLite", () => {
     expect(existsSync(join(claudeDir, "settings.json"))).toBe(false);
     expect(existsSync(join(claudeDir, "CLAUDE.md"))).toBe(false);
     expect(existsSync(join(workDir, "WORK_LEDGER.md"))).toBe(false);
+    expect(existsSync(join(claudeDir, "skills", "eod"))).toBe(false);
+  });
+
+  test("symlinks repo skills into ~/.claude/skills (references the repo, idempotent)", () => {
+    const claudeDir = tmp("tc-c-");
+    const workDir = tmp("tc-w-");
+    runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+
+    const link = join(claudeDir, "skills", "eod");
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(link)).toBe(join(SCAFFOLD, "skills", "eod"));
+    // The linked skill resolves to the repo's real SKILL.md.
+    expect(existsSync(join(link, "SKILL.md"))).toBe(true);
+
+    // Second run re-links nothing.
+    const r2 = runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+    expect(r2.installed.filter((x) => x.startsWith("skill "))).toHaveLength(0);
+  });
+
+  test("never clobbers a pre-existing non-symlink skill of the same name", () => {
+    const claudeDir = tmp("tc-c-");
+    const workDir = tmp("tc-w-");
+    const realSkill = join(claudeDir, "skills", "eod");
+    mkdirSync(realSkill, { recursive: true });
+    writeFileSync(join(realSkill, "SKILL.md"), "# hand-authored, do not touch\n");
+
+    runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+
+    // Left untouched: still a real dir, not a symlink, with original content.
+    expect(lstatSync(realSkill).isSymbolicLink()).toBe(false);
+    expect(readFileSync(join(realSkill, "SKILL.md"), "utf-8")).toContain("hand-authored");
   });
 
   test("anti: never writes a plist or references launchctl/osascript", () => {

@@ -50,7 +50,9 @@ export function parseEodFiles(workDir: string): EodLine[] {
 
     const lines = content.split("\n");
     for (const raw of lines) {
-      const line = raw.trim();
+      // Tolerate a leading markdown list marker so EOD files render as a list
+      // while the "prefix:" contract stays machine-parseable (e.g. "- done: …").
+      const line = raw.trim().replace(/^[-*]\s+/, "");
       if (!line) continue;
       if (line.startsWith("<!--") || line.endsWith("-->")) continue;
 

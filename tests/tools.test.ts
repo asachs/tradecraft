@@ -141,24 +141,19 @@ describe("EodSummary", () => {
     expect(exitCode).toBe(0);
     const contentLines = stdout
       .split("\n")
-      .filter((l) => /^(done|decided|promised|learned|met|blocked):/.test(l));
+      .filter((l) => /^- (done|decided|promised|learned|met|blocked):/.test(l));
     expect(contentLines.length).toBeGreaterThanOrEqual(1);
     expect(contentLines.length).toBeLessThanOrEqual(6);
   });
 
-  test("every content line starts with a valid prefix", () => {
+  test("every bullet line starts with a valid prefix", () => {
     const { stdout } = runTool("EodSummary.ts", ["--date", "2026-06-03"]);
     const validPrefixes = ["done:", "decided:", "promised:", "learned:", "met:", "blocked:"];
-    const contentLines = stdout
-      .split("\n")
-      .filter((l) => l.trim() && !l.startsWith("<!--") && l.trim().length > 0)
-      .filter((l) => !l.startsWith("<!--"));
-    // Non-comment, non-empty lines should start with a valid prefix
-    for (const line of contentLines) {
-      if (line.trim() === "") continue;
-      if (line.startsWith("<!--")) continue;
-      const hasPrefix = validPrefixes.some((p) => line.startsWith(p));
-      expect(hasPrefix).toBe(true);
+    const bullets = stdout.split("\n").filter((l) => l.startsWith("- "));
+    expect(bullets.length).toBeGreaterThanOrEqual(1);
+    for (const b of bullets) {
+      const body = b.slice(2);
+      expect(validPrefixes.some((p) => body.startsWith(p))).toBe(true);
     }
   });
 

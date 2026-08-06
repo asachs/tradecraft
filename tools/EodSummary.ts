@@ -90,14 +90,17 @@ if (outputLines.length === 0) {
   outputLines.push("done: no captured activity today");
 }
 
-// Cap at 6 lines
-const capped = outputLines.slice(0, 6);
-
-// Add review reminder
-capped.push("");
-capped.push("<!-- Review: edit these lines in your own words before sharing — nothing is sent automatically. -->");
-
-const output = capped.join("\n") + "\n";
+// Cap at 6, then render as a markdown bullet list under a heading so the saved
+// .md renders properly while the "prefix:" contract stays parseable.
+const bullets = outputLines.slice(0, 6).map((l) => `- ${l}`);
+const output =
+  [
+    `# End of Day — ${dateStr}`,
+    "",
+    ...bullets,
+    "",
+    "<!-- Review: edit these lines in your own words before sharing — nothing is sent automatically. -->",
+  ].join("\n") + "\n";
 
 if (save) {
   const eodDir = join(workDir, "worklog", "eod");
