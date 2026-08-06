@@ -4,11 +4,12 @@
  *
  * Usage: bun tools/MondayPlan.ts [--date YYYY-MM-DD] [--out <file>]
  */
-import { writeFileSync, readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { resolveWorkDir } from "./lib/config.ts";
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
 import { parseDate, formatDate, isoWeekWindow, isoWeekNumber } from "./lib/dates.ts";
+import { readInitiatives, candidateOrg } from "./lib/initiatives.ts";
 
 function parseArgs(): { date: Date; out?: string } {
   const args = process.argv.slice(2);
@@ -44,20 +45,8 @@ const openPromises = filterByStatus(promises, "open");
 const thisWeekDue = filterByDueWindow(openPromises, start, end);
 const overdue = filterOverdue(promises);
 
-// Discover initiatives
-let initiatives: string[] = [];
-const initDir = join(workDir, "initiatives");
-try {
-  initiatives = readdirSync(initDir).filter((name) => {
-    try {
-      return statSync(join(initDir, name)).isDirectory();
-    } catch {
-      return false;
-    }
-  });
-} catch {
-  // no initiatives dir — fine
-}
+// Discover initiatives — org-assigned (initiatives/) vs personal-provenance (personal/)
+const { org: orgInitiatives, personal: personalInitiatives } = readInitiatives(workDir);
 
 const lines: string[] = [];
 lines.push(`# Monday Plan — W${isoWeekNumber(parseDate(start))} (week of ${start})`);
@@ -87,14 +76,30 @@ if (overdue.length === 0) {
 }
 lines.push("");
 
-// Initiatives
+// Initiatives — split org-assigned vs personal (provenance)
 lines.push("## Initiatives");
 lines.push("");
-if (initiatives.length === 0) {
-  lines.push("No initiative directories found.");
+lines.push("### Org-assigned");
+if (orgInitiatives.length === 0) {
+  lines.push("None.");
 } else {
-  for (const name of initiatives) {
-    lines.push(`- ${name} — <!-- status: update here -->`);
+  for (const it of orgInitiatives) {
+    const meta = it.fm.label
+      ? ` (${it.fm.label}${it.fm.role ? `, ${it.fm.role}` : ""})`
+      : "";
+    lines.push(`- ${it.slug}${meta} — <!-- status: update here -->`);
+  }
+}
+lines.push("");
+lines.push("### Personal — pending funding / reclassification");
+if (personalInitiatives.length === 0) {
+  lines.push("None.");
+} else {
+  for (const it of personalInitiatives) {
+    const cand = candidateOrg(it);
+    const home = cand ? `→ ${cand}` : "→ unmapped";
+    const fund = it.fm.funding_status ? ` [${it.fm.funding_status}]` : "";
+    lines.push(`- ${it.slug} ${home}${fund}`);
   }
 }
 lines.push("");
