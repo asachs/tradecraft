@@ -1,6 +1,15 @@
+---
+kind: org-assigned | personal
+provenance: <where it came from — org strategy doc, or the self-found context>
+candidate_org: <if personal and it could feed an org initiative, name it; else none>
+funding_status: funded | unfunded | n/a
+---
+
 # ISA — <initiative name>
 
 > Definition of done, written BEFORE work starts. Keep it short; keep it testable.
+>
+> **Frontmatter:** `kind` splits org-assigned from self-found (`personal`). A personal initiative that names a `candidate_org` and clears the prioritisation filter is a **promotion candidate** — surface it in `REGISTRY.md` and pitch it.
 
 ## Problem
 

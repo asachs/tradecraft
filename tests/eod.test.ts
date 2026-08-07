@@ -1,5 +1,7 @@
-import { describe, test, expect } from "bun:test";
-import { resolve } from "node:path";
+import { describe, test, expect, afterEach } from "bun:test";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve, join } from "node:path";
 import { parseEodFiles, filterEodByWindow } from "../tools/lib/eod.ts";
 
 const fixtureDir = resolve(import.meta.dir, "fixtures/work");
@@ -93,5 +95,35 @@ describe("filterEodByWindow", () => {
     for (let i = 1; i < dates.length; i++) {
       expect(dates[i] >= dates[i - 1]).toBe(true);
     }
+  });
+});
+
+describe("markdown bullet format", () => {
+  const tmps: string[] = [];
+  afterEach(() => {
+    while (tmps.length) {
+      try {
+        rmSync(tmps.pop()!, { recursive: true, force: true });
+      } catch {
+        /* best effort */
+      }
+    }
+  });
+
+  test("parses '- prefix: text' bullets (renderable + parseable) and strips [BRAG?]", () => {
+    const d = mkdtempSync(join(tmpdir(), "tc-eodmd-"));
+    tmps.push(d);
+    const eod = join(d, "worklog", "eod");
+    mkdirSync(eod, { recursive: true });
+    writeFileSync(
+      join(eod, "2026-07-27.md"),
+      "# End of Day — 2026-07-27\n\n- done: shipped the thing [BRAG?]\n- decided: went with X\n\n<!-- Review -->\n"
+    );
+    const lines = parseEodFiles(d);
+    expect(lines.length).toBe(2);
+    const done = lines.find((l) => l.prefix === "done")!;
+    expect(done.text).toBe("shipped the thing");
+    expect(done.brag).toBe(true);
+    expect(lines.find((l) => l.prefix === "decided")!.text).toBe("went with X");
   });
 });

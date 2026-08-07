@@ -6,7 +6,7 @@ Draft a manager-ready weekly summary from the week's activity log. The user edit
 
 - `~/work/worklog/activity.jsonl` — this week's entries (Mon-Fri)
 - `~/work/WORK_LEDGER.md` — promises closed or due
-- Open initiative ISAs under `~/work/initiatives/` — for status against definition-of-done
+- Open initiative ISAs under `~/work/initiatives/{org,personal}/` — for status against definition-of-done
 
 ## Instructions
 

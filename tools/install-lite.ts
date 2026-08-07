@@ -23,6 +23,10 @@ import {
   copyFileSync,
   readFileSync,
   writeFileSync,
+  readdirSync,
+  symlinkSync,
+  lstatSync,
+  readlinkSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve, dirname } from "node:path";
@@ -152,19 +156,19 @@ export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
     installed.push(desc);
   }
 
-  // [1/4] Work directories (the report tools + WorkBrief read these).
-  log("\n[1/4] Ensuring work directories...");
+  // [1/5] Work directories (the report tools + WorkBrief read these).
+  log("\n[1/5] Ensuring work directories...");
   for (const sub of ["worklog/eod", "initiatives", "reports"]) {
     ensureDir(join(workDir, sub));
   }
 
-  // [2/4] Seed the ledger + brag doc if absent (WorkBrief reads the ledger).
-  log("\n[2/4] Seeding work files (if missing)...");
+  // [2/5] Seed the ledger + brag doc if absent (WorkBrief reads the ledger).
+  log("\n[2/5] Seeding work files (if missing)...");
   seedIfMissing(join(scaffoldDir, "templates", "WORK_LEDGER.md"), join(workDir, "WORK_LEDGER.md"), "WORK_LEDGER.md");
   seedIfMissing(join(scaffoldDir, "templates", "BRAG.md"), join(workDir, "BRAG.md"), "BRAG.md");
 
-  // [3/4] Merge the lite snippet into settings.json (hooks + scoped perms).
-  log("\n[3/4] Merging settings.json (hooks reference the repo; scoped Bash)...");
+  // [3/5] Merge the lite snippet into settings.json (hooks + scoped perms).
+  log("\n[3/5] Merging settings.json (hooks reference the repo; scoped Bash)...");
   const snippet = buildLiteSnippet(scaffoldDir, opts.bunPath ?? process.execPath);
   const settingsDest = join(claudeDir, "settings.json");
   if (!existsSync(settingsDest)) {
@@ -190,8 +194,8 @@ export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
     }
   }
 
-  // [4/4] Append the scaffold @import to CLAUDE.md — never overwrite.
-  log("\n[4/4] Layering CLAUDE.md via @import (append, never overwrite)...");
+  // [4/5] Append the scaffold @import to CLAUDE.md — never overwrite.
+  log("\n[4/5] Layering CLAUDE.md via @import (append, never overwrite)...");
   const claudeMdDest = join(claudeDir, "CLAUDE.md");
   const existingMd = existsSync(claudeMdDest) ? readFileSync(claudeMdDest, "utf-8") : null;
   const nextMd = injectImport(existingMd, scaffoldDir);
@@ -206,6 +210,39 @@ export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
     }
     log(`  ${tag}${existingMd === null ? "created" : "appended import to"}: CLAUDE.md${existingMd !== null ? " (backup: CLAUDE.md.bak)" : ""}`);
     installed.push("CLAUDE.md import");
+  }
+
+  // [5/5] Symlink repo skills into ~/.claude/skills — reference the repo, never copy.
+  // Additive: skips a skill that already exists and isn't our symlink (no clobbering).
+  log("\n[5/5] Linking skills into ~/.claude/skills...");
+  const skillsSrcDir = join(scaffoldDir, "skills");
+  if (!existsSync(skillsSrcDir)) {
+    log("  skipped (no skills/ in repo)");
+  } else {
+    const skillsDestDir = join(claudeDir, "skills");
+    ensureDir(skillsDestDir);
+    for (const entry of readdirSync(skillsSrcDir)) {
+      const src = join(skillsSrcDir, entry);
+      const dest = join(skillsDestDir, entry);
+      let status: "linked" | "exists" | "absent";
+      try {
+        const st = lstatSync(dest);
+        status = st.isSymbolicLink() && readlinkSync(dest) === src ? "linked" : "exists";
+      } catch {
+        status = "absent";
+      }
+      if (status === "linked") {
+        log(`  skipped (already linked): skills/${entry}`);
+        skipped.push(`skill ${entry}`);
+      } else if (status === "exists") {
+        log(`  skipped (exists, not clobbering): skills/${entry}`);
+        skipped.push(`skill ${entry}`);
+      } else {
+        if (!dryRun) symlinkSync(src, dest);
+        log(`  ${tag}linked: skills/${entry}`);
+        installed.push(`skill ${entry}`);
+      }
+    }
   }
 
   return { installed, skipped };
@@ -232,7 +269,7 @@ if (import.meta.main) {
   console.log("\n--- Lite install complete ---");
   console.log(`  installed: ${installed.length}   skipped: ${skipped.length}`);
   console.log("Next steps:");
-  console.log("  1. Restart Claude Code so the SessionStart brief + activity hook load.");
-  console.log("  2. Work normally — the brief surfaces overdue/EOD state each session.");
+  console.log("  1. Restart Claude Code so the SessionStart brief + activity hook load, and skills register.");
+  console.log("  2. Work normally — the brief surfaces overdue/EOD state each session; type /eod to wrap up.");
   console.log("  3. Run report tools on demand (see README); schedule.ts stays uninstalled here.");
 }

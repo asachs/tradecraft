@@ -32,7 +32,7 @@ Read these for domain context (all optional, degrade gracefully when missing):
 | `~/src/tradecraft/CLAUDE.md` | Scaffold operational rules + sharing discretion |
 | `~/src/tradecraft/company.md` | Employer-specific context (gitignored) |
 | `~/work/WORK_LEDGER.md` | Active promises |
-| `~/work/initiatives/` | Active ISAs |
+| `~/work/initiatives/{org,personal}/` | Active ISAs |
 | `~/work/worklog/activity.jsonl` | Session activity log |
 | `~/.claude/PAI/MEMORY/WORK/` | Work memory (ISA slugs, learnings) |
 | `~/.claude/PAI/MEMORY/STATE/` | Session state |
@@ -46,7 +46,7 @@ The Algorithm's Learning Router (LEARN phase) references personal surfaces that 
 | `knowledge` | `MEMORY/KNOWLEDGE/` | `MEMORY/LEARNING/` (work learnings only) |
 | `rule` | `CLAUDE.md` Operational Rules | `~/src/tradecraft/CLAUDE.md` — propose, don't write |
 | `gotcha` | Skill `SKILL.md` Gotchas | Same (skills are present on work machine) |
-| `state` | `USER/PROJECTS/PROJECTS.md` | `~/work/initiatives/` — update the relevant ISA |
+| `state` | `USER/PROJECTS/PROJECTS.md` | `~/work/initiatives/{org,personal}/` — update the relevant ISA |
 | `business` | `USER/BUSINESS/<topic>.md` | `~/src/tradecraft/company.md` — propose, don't write |
 | `identity` | `USER/PRINCIPAL_IDENTITY.md` | `PAI/USER/WORK_IDENTITY.md` — surface to user |
 | `doctrine` | Algorithm version file | Surface to user (don't modify Algorithm on work machine) |
