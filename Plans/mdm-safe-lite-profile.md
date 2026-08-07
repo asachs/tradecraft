@@ -44,4 +44,4 @@ A single additive installer (`install-lite.ts`) plus one `SessionStart` hook (`W
 - ISC-6: resulting `permissions.allow` = `["Bash(git *)","Bash(bun *)"]` (no blanket `Bash`); `deny` includes `Bash(osascript *)`, elevenlabs, telegram, t.me.
 - ISC-7: the org-policy CLAUDE.md ("SSH commands are blocked…") was preserved verbatim with the `@<repo>/CLAUDE.md` import appended under a marker comment; `CLAUDE.md.bak` holds the original. Second run: "skipped (already wired)" / "skipped (import already present)" — `installed: 0`; single import line, single `Bash(bun *)` entry (idempotency test asserts this).
 - ISC-8: install-lite.test.ts anti-test asserts the written settings contain no `launchctl` / `.plist` and no hook command contains `osascript`/`launchct`. `schedule.ts` left untouched and uninstalled.
-- Hygiene: `grep -rinE "payroc|asachs|/Users/|andre|bluesnap"` over all 5 new files → clean; `bun tools/verify-clean.ts` → "no identity/employer strings found".
+- Hygiene: an identity/employer-string sweep over all 5 new files → clean; `bun tools/verify-clean.ts` → "no identity/employer strings found".
