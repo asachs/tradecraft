@@ -8,6 +8,18 @@ Good work is invisible by default. You ship the thing, fix the incident, make th
 
 Tradecraft treats that as a pipeline problem. The fix isn't to work harder or write a heroic essay every Friday — it's to capture the record continuously, at the moment of doing, so cheaply that the habit survives a busy week. A few deterministic tools then turn that captured stream into review-ready drafts you only have to edit, not assemble.
 
+## Why now
+
+Tradecraft predates the current AI wave, but AI is what makes it load-bearing rather than merely tidy.
+
+AI decouples the rate of production from the rate of comprehension. Compute scales how much a person can generate, decide, and change. Human context capacity, meaning what you can hold, verify, and actually stand behind, does not. The gap between the two is the problem of the moment. It is not that there is more information; it is that there is more of it than any human can keep trustworthy at the speed it now arrives. Output outruns provenance, synthesis outruns attribution, and change outruns the coordination and paydown capacity of the people living with it.
+
+That overload lands at two scales. Individually, you can now produce more analysis in an afternoon than you can remember the basis for by Friday. Organisationally, teams get flooded with fast-moving, individually-sensible change they have no bandwidth to examine, and the people downstream are left executing what they can no longer question.
+
+Tradecraft is the counter-discipline. Reframed for this moment, it is not a note-taking habit but a context-integrity system: it externalises context into durable, structured, attributed, carry-forward records, so a human stays the accountable holder of it while the machine accelerates the production. The scarce resource has moved. Producing the analysis is cheap now; trusting it is not. Provenance, the line between verified and inferred, and what a named person will defend under a hostile read: that is what the record now protects, and it does not survive acceleration by default. It has to be engineered.
+
+The three ideas below are that engineering. Everything the method insists on, from define-done-before-you-start to capture-at-the-moment to attribute-the-claim and mark-the-inference and draft-then-a-human-decides, is a defence of context integrity under acceleration. Used with discipline, AI becomes a net contributor to the record rather than a net polluter of it. That choice is the whole game.
+
 ## The mental model
 
 Three ideas carry the whole system:
