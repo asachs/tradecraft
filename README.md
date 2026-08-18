@@ -34,7 +34,7 @@ bun tools/install.ts          # --dry-run to preview · --force to overwrite · 
 
 Then start `claude` (ideally inside tmux on an always-on host) and work normally. The activity log accumulates; run the workflows on Friday.
 
-> Running full PAI on the work machine instead of vanilla Claude Code? Use `bootstrap-work-profile.ts` with a PAI archive — it installs the PAI work profile (identity files, memory dirs) on top of this kit.
+> Running full LifeOS on the work machine instead of vanilla Claude Code? Use `bootstrap-work-profile.ts` with a LifeOS archive — it installs the LifeOS work profile (identity files, memory dirs) on top of this kit.
 
 ## Report engine
 

@@ -57,14 +57,14 @@ describe("bootstrap-work-profile", () => {
     expect(exitCode).toBe(0);
 
     // Memory dirs created
-    expect(existsSync(join(home, ".claude", "PAI", "MEMORY", "WORK"))).toBe(true);
-    expect(existsSync(join(home, ".claude", "PAI", "MEMORY", "OBSERVABILITY"))).toBe(true);
-    expect(existsSync(join(home, ".claude", "PAI", "MEMORY", "STATE"))).toBe(true);
-    expect(existsSync(join(home, ".claude", "PAI", "MEMORY", "LEARNING"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "MEMORY", "WORK"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "MEMORY", "OBSERVABILITY"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "MEMORY", "STATE"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "MEMORY", "LEARNING"))).toBe(true);
 
     // Identity files installed
-    expect(existsSync(join(home, ".claude", "PAI", "USER", "WORK_IDENTITY.md"))).toBe(true);
-    expect(existsSync(join(home, ".claude", "PAI", "USER", "DA_IDENTITY_WORK.md"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "USER", "WORK_IDENTITY.md"))).toBe(true);
+    expect(existsSync(join(home, ".claude", "LIFEOS", "USER", "DA_IDENTITY_WORK.md"))).toBe(true);
 
     // Work dirs created
     expect(existsSync(join(home, "work", "worklog", "eod"))).toBe(true);
@@ -86,10 +86,10 @@ describe("bootstrap-work-profile", () => {
 
   test("does not overwrite existing files without --force", () => {
     const home = join(tmpDir, "home");
-    mkdirSync(join(home, ".claude", "PAI", "USER"), { recursive: true });
+    mkdirSync(join(home, ".claude", "LIFEOS", "USER"), { recursive: true });
 
     // Pre-populate identity file
-    const identityPath = join(home, ".claude", "PAI", "USER", "WORK_IDENTITY.md");
+    const identityPath = join(home, ".claude", "LIFEOS", "USER", "WORK_IDENTITY.md");
     writeFileSync(identityPath, "# My Custom Identity");
 
     runBootstrap(home, ["--skip-archive"]);
@@ -101,10 +101,10 @@ describe("bootstrap-work-profile", () => {
 
   test("--force overwrites existing files", () => {
     const home = join(tmpDir, "home");
-    mkdirSync(join(home, ".claude", "PAI", "USER"), { recursive: true });
+    mkdirSync(join(home, ".claude", "LIFEOS", "USER"), { recursive: true });
 
     // Pre-populate identity file
-    const identityPath = join(home, ".claude", "PAI", "USER", "WORK_IDENTITY.md");
+    const identityPath = join(home, ".claude", "LIFEOS", "USER", "WORK_IDENTITY.md");
     writeFileSync(identityPath, "# My Custom Identity");
 
     runBootstrap(home, ["--skip-archive", "--force"]);

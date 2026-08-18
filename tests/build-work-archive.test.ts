@@ -10,19 +10,19 @@ import { join, resolve } from "node:path";
 
 const toolsDir = resolve(import.meta.dir, "../tools");
 
-/** Create a fake PAI directory structure for testing. */
-function createFakePAI(base: string) {
+/** Create a fake LifeOS profile directory structure for testing. */
+function createFakeProfile(base: string) {
   const claude = join(base, ".claude");
-  const pai = join(claude, "PAI");
+  const profile = join(claude, "LIFEOS");
 
-  // PAI dirs
+  // profile dirs
   for (const dir of ["ALGORITHM", "DOCUMENTATION", "TOOLS"]) {
-    mkdirSync(join(pai, dir), { recursive: true });
-    writeFileSync(join(pai, dir, "test.md"), `# ${dir}`);
+    mkdirSync(join(profile, dir), { recursive: true });
+    writeFileSync(join(profile, dir, "test.md"), `# ${dir}`);
   }
   // Nested DOCUMENTATION subdir
-  mkdirSync(join(pai, "DOCUMENTATION", "sub"), { recursive: true });
-  writeFileSync(join(pai, "DOCUMENTATION", "sub", "nested.md"), "nested");
+  mkdirSync(join(profile, "DOCUMENTATION", "sub"), { recursive: true });
+  writeFileSync(join(profile, "DOCUMENTATION", "sub", "nested.md"), "nested");
 
   // Hooks
   const hooksDir = join(claude, "hooks");
@@ -107,7 +107,7 @@ describe("build-work-archive", () => {
   test("--dry-run produces manifest without creating archive", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    createFakePAI(fakeHome);
+    createFakeProfile(fakeHome);
 
     const { stdout, exitCode } = runArchiveBuilder(
       ["--dry-run", "--out", join(tmpDir, "out")],
@@ -123,14 +123,14 @@ describe("build-work-archive", () => {
     expect(stdout).toContain("skills/ISA/SKILL.md");
     expect(stdout).toContain("skills/ISA/Workflows/Scaffold.md");
     expect(stdout).toContain("skills/Research/Workflows/Quick.md");
-    expect(stdout).toContain("PAI/ALGORITHM/test.md");
-    expect(stdout).toContain("PAI/DOCUMENTATION/sub/nested.md");
+    expect(stdout).toContain("LIFEOS/ALGORITHM/test.md");
+    expect(stdout).toContain("LIFEOS/DOCUMENTATION/sub/nested.md");
   });
 
   test("includes skill .md files (non-directory skills)", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    createFakePAI(fakeHome);
+    createFakeProfile(fakeHome);
 
     const { stdout } = runArchiveBuilder(["--dry-run"], fakeHome);
     expect(stdout).toContain("skills/Council.md");
@@ -139,7 +139,7 @@ describe("build-work-archive", () => {
   test("warns about missing hooks but does not fail", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    const claude = createFakePAI(fakeHome);
+    const claude = createFakeProfile(fakeHome);
 
     // Remove one hook
     rmSync(join(claude, "hooks", "PreCompact.hook.ts"));
@@ -152,7 +152,7 @@ describe("build-work-archive", () => {
   test("warns about missing skills but does not fail", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    createFakePAI(fakeHome);
+    createFakeProfile(fakeHome);
     // Fabric skill doesn't exist in our fake setup
 
     const { stderr, exitCode } = runArchiveBuilder(["--dry-run"], fakeHome);
@@ -160,19 +160,19 @@ describe("build-work-archive", () => {
     expect(stderr).toContain("skills/Fabric");
   });
 
-  test("fails when PAI root does not exist", () => {
+  test("fails when the LifeOS profile root does not exist", () => {
     const fakeHome = join(tmpDir, "empty-home");
     mkdirSync(fakeHome);
 
     const { stderr, exitCode } = runArchiveBuilder(["--dry-run"], fakeHome);
     expect(exitCode).toBe(1);
-    expect(stderr).toContain("PAI root not found");
+    expect(stderr).toContain("LifeOS profile root not found");
   });
 
   test("creates a valid tar.gz archive", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    createFakePAI(fakeHome);
+    createFakeProfile(fakeHome);
     const outDir = join(tmpDir, "out");
 
     const { exitCode } = runArchiveBuilder(["--out", outDir], fakeHome);
@@ -198,13 +198,13 @@ describe("build-work-archive", () => {
     ).toBe(true);
     expect(existsSync(join(extractDir, "hooks", "lib", "paths.ts"))).toBe(true);
     expect(existsSync(join(extractDir, "skills", "ISA", "Workflows", "Scaffold.md"))).toBe(true);
-    expect(existsSync(join(extractDir, "PAI", "DOCUMENTATION", "sub", "nested.md"))).toBe(true);
+    expect(existsSync(join(extractDir, "LIFEOS", "DOCUMENTATION", "sub", "nested.md"))).toBe(true);
   });
 
   test("cleans up staging directory after build", () => {
     const fakeHome = join(tmpDir, "home");
     mkdirSync(fakeHome);
-    createFakePAI(fakeHome);
+    createFakeProfile(fakeHome);
     const outDir = join(tmpDir, "out");
 
     runArchiveBuilder(["--out", outDir], fakeHome);

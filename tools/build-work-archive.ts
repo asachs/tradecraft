@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * build-work-archive.ts — Extract work-safe PAI files into a portable tarball.
+ * build-work-archive.ts — Extract work-safe LifeOS files into a portable tarball.
  *
  * Runs on the PERSONAL machine. Produces an archive that bootstrap-work-profile.ts
  * consumes on the work machine.
@@ -21,6 +21,7 @@ import {
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { formatDate } from "./lib/dates.ts";
+import { PROFILE_DIR_NAME } from "./lib/config.ts";
 
 // ── Whitelist configuration ──
 
@@ -58,8 +59,8 @@ const WORK_SAFE_SKILLS = [
   "BeCreative",
 ];
 
-/** PAI subdirectories to copy in full (recursively). */
-const PAI_COPY_DIRS = ["ALGORITHM", "DOCUMENTATION", "TOOLS"];
+/** Profile subdirectories to copy in full (recursively). */
+const PROFILE_COPY_DIRS = ["ALGORITHM", "DOCUMENTATION", "TOOLS"];
 
 /** Hook subdirectories to copy in full (recursively). */
 const HOOK_COPY_DIRS = ["lib", "security"];
@@ -93,13 +94,13 @@ function parseArgs(): { dryRun: boolean; outDir: string } {
 }
 
 const { dryRun, outDir } = parseArgs();
-const paiRoot = join(homedir(), ".claude", "PAI");
+const profileRoot = join(homedir(), ".claude", PROFILE_DIR_NAME);
 const hooksDir = join(homedir(), ".claude", "hooks");
 const skillsDir = join(homedir(), ".claude", "skills");
 
-if (!existsSync(paiRoot)) {
-  console.error(`error: PAI root not found at ${paiRoot}`);
-  console.error("This script must run on the personal machine where PAI is installed.");
+if (!existsSync(profileRoot)) {
+  console.error(`error: LifeOS profile root not found at ${profileRoot}`);
+  console.error("This script must run on the personal machine where LifeOS is installed.");
   process.exit(1);
 }
 
@@ -195,18 +196,18 @@ for (const skill of WORK_SAFE_SKILLS) {
   }
 }
 
-// PAI directories (ALGORITHM, DOCUMENTATION, TOOLS) — recursive
-for (const dir of PAI_COPY_DIRS) {
-  const dirPath = join(paiRoot, dir);
+// Profile directories (ALGORITHM, DOCUMENTATION, TOOLS) — recursive
+for (const dir of PROFILE_COPY_DIRS) {
+  const dirPath = join(profileRoot, dir);
   if (existsSync(dirPath) && statSync(dirPath).isDirectory()) {
     for (const relFile of walk(dirPath)) {
       manifest.push({
-        archivePath: `PAI/${dir}/${relFile}`,
+        archivePath: `${PROFILE_DIR_NAME}/${dir}/${relFile}`,
         sourcePath: join(dirPath, relFile),
       });
     }
   } else {
-    missing.push(`PAI/${dir}`);
+    missing.push(`${PROFILE_DIR_NAME}/${dir}`);
   }
 }
 

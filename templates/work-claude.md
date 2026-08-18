@@ -1,7 +1,7 @@
-# PAI Work Profile
+# LifeOS Work Profile
 
-@PAI/USER/WORK_IDENTITY.md
-@PAI/USER/DA_IDENTITY_WORK.md
+@LIFEOS/USER/WORK_IDENTITY.md
+@LIFEOS/USER/DA_IDENTITY_WORK.md
 
 ## Mode
 
@@ -9,7 +9,7 @@ On session start, classify the first prompt:
 
 - **MINIMAL** — quick lookup, one-shot answer, no ceremony
 - **NATIVE** — standard work: ISA discipline, decisions logged, promises ledgered
-- **ALGORITHM** — complex multi-step: Read `PAI/ALGORITHM/LATEST`, then follow the spec exactly
+- **ALGORITHM** — complex multi-step: Read `LIFEOS/ALGORITHM/LATEST`, then follow the spec exactly
 
 Default to NATIVE unless the task is trivially small (MINIMAL) or explicitly complex (ALGORITHM).
 
@@ -34,8 +34,8 @@ Read these for domain context (all optional, degrade gracefully when missing):
 | `~/work/WORK_LEDGER.md` | Active promises |
 | `~/work/initiatives/{org,personal}/` | Active ISAs |
 | `~/work/worklog/activity.jsonl` | Session activity log |
-| `~/.claude/PAI/MEMORY/WORK/` | Work memory (ISA slugs, learnings) |
-| `~/.claude/PAI/MEMORY/STATE/` | Session state |
+| `~/.claude/LIFEOS/MEMORY/WORK/` | Work memory (ISA slugs, learnings) |
+| `~/.claude/LIFEOS/MEMORY/STATE/` | Session state |
 
 ## Learning Router Override
 
@@ -48,7 +48,7 @@ The Algorithm's Learning Router (LEARN phase) references personal surfaces that 
 | `gotcha` | Skill `SKILL.md` Gotchas | Same (skills are present on work machine) |
 | `state` | `USER/PROJECTS/PROJECTS.md` | `~/work/initiatives/{org,personal}/` — update the relevant ISA |
 | `business` | `USER/BUSINESS/<topic>.md` | `~/src/tradecraft/company.md` — propose, don't write |
-| `identity` | `USER/PRINCIPAL_IDENTITY.md` | `PAI/USER/WORK_IDENTITY.md` — surface to user |
+| `identity` | `USER/PRINCIPAL_IDENTITY.md` | `LIFEOS/USER/WORK_IDENTITY.md` — surface to user |
 | `doctrine` | Algorithm version file | Surface to user (don't modify Algorithm on work machine) |
 | `hook` | `hooks/*.hook.ts` | Surface to user |
 | `permission` | `settings.json` | Surface to user |

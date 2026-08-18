@@ -32,7 +32,7 @@ Everything else — the tools, the hook, the file layout — is machinery in ser
 
 ## 1. The ISA — definition of done, first
 
-ISA stands for *Ideal State Artifact*, a primitive borrowed from [PAI's](https://github.com/danielmiessler/PAI) Algorithm. Stripped to its essence, it's a short document you write **before** the first edit: the goal, and the verifiable criteria that mean the goal is met. Done is when every criterion is checked, with evidence — not when it feels finished.
+ISA stands for *Ideal State Artifact*, a primitive borrowed from [LifeOS's](https://github.com/danielmiessler/LifeOS) Algorithm. Stripped to its essence, it's a short document you write **before** the first edit: the goal, and the verifiable criteria that mean the goal is met. Done is when every criterion is checked, with evidence — not when it feels finished.
 
 Each initiative gets one, at `$WORK_DIR/initiatives/{org,personal}/<slug>/ISA.md`, started from `templates/ISA.md`. The discipline is small but load-bearing: if you wrote down what "finished" looks like up front, you can't quietly drift away from it, and "is this done?" becomes a question you answer against a written bar instead of a mood. The repo's own root `ISA.md` is the worked example — it's the definition-of-done for the tools you're reading about.
 

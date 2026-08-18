@@ -29,7 +29,7 @@ No LLM calls inside the tools — they are deterministic shapers; prose polish s
 - No network calls of any kind in any tool
 - Tools read only under `WORK_DIR` (env-configurable, default `~/work`) and the repo's own files; write only to stdout or `--out <file>` under `WORK_DIR`
 - Discretion: generated drafts carry ticket refs as bare references; tools never embed file contents, diffs, or commit messages beyond the one-line `last_commit` already captured
-- Repo stays employer-agnostic: no company names, internal hostnames, or personal-PAI paths anywhere in code, fixtures, or docs
+- Repo stays employer-agnostic: no company names, internal hostnames, or personal-LifeOS paths anywhere in code, fixtures, or docs
 
 ## Goal
 

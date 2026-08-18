@@ -22,6 +22,15 @@ export function resolveWorkDir(): string {
 }
 
 /**
+ * Directory name of the personal-assistant profile inside `~/.claude/`.
+ *
+ * Upstream renamed PAI → LifeOS (danielmiessler/PAI now redirects to
+ * danielmiessler/LifeOS), and the installed tree renamed with it. Kept here so
+ * the next rename is a one-line change rather than a repo-wide sweep.
+ */
+export const PROFILE_DIR_NAME = "LIFEOS";
+
+/**
  * True when `candidate` resolves to a path strictly inside `workDir`.
  *
  * Used to contain `--out` writes. A plain `startsWith` prefix test is wrong:

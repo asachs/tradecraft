@@ -98,7 +98,7 @@
     ]
   },
   "env": {
-    "PAI_DIR": "$HOME/.claude/PAI",
+    "LIFEOS_DIR": "$HOME/.claude/LIFEOS",
     "WORK_DIR": "$HOME/work",
     "WORK_MODE": "1"
   }
