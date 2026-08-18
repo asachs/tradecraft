@@ -158,7 +158,7 @@ export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
 
   // [1/5] Work directories (the report tools + WorkBrief read these).
   log("\n[1/5] Ensuring work directories...");
-  for (const sub of ["worklog/eod", "initiatives", "reports"]) {
+  for (const sub of ["worklog/eod", "initiatives/org", "initiatives/personal", "reports"]) {
     ensureDir(join(workDir, sub));
   }
 

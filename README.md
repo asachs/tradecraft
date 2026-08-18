@@ -11,8 +11,8 @@ Portable Claude Code working patterns for a corporate environment. **Patterns on
 A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM:
 
 - **CLAUDE.md** — work-profile instructions: operational rules, the review conventions, capture conventions
-- **templates/** — ISA (definition-of-done) template, decision log, promise ledger, brag document
-- **workflows/** — prompts for the end-of-day summary and the weekly report
+- **templates/** — ISA (definition-of-done), execution plan, worklog, decision log, initiative registry, promise ledger, brag document
+- **workflows/** — prompts for the start-of-day check, end-of-day summary, Monday planning, and the weekly report
 - **hooks/** — session activity logging (auto-accumulates "what was done, where") + settings snippet
 
 ## Core principles
@@ -30,7 +30,7 @@ cd ~/src/tradecraft
 bun tools/install.ts          # --dry-run to preview · --force to overwrite · WORK_DIR=… to relocate
 ```
 
-`install.ts` is idempotent. It creates `~/work/{worklog,initiatives,reports}`, seeds `WORK_LEDGER.md` and `BRAG.md`, installs the work-profile `CLAUDE.md` and the `SessionActivityLog` hook into `~/.claude/`, and merges the hook into `settings.json` (backing up any existing file). Re-runs skip what's already there, and it never silently overwrites an existing `~/.claude/CLAUDE.md` — it tells you to merge by hand or pass `--force`.
+`install.ts` is idempotent. It creates `~/work/{worklog,initiatives/{org,personal},reports}`, seeds `WORK_LEDGER.md` and `BRAG.md`, installs the work-profile `CLAUDE.md` and the `SessionActivityLog` hook into `~/.claude/`, and merges the hook into `settings.json` (backing up any existing file). Re-runs skip what's already there, and it never silently overwrites an existing `~/.claude/CLAUDE.md` — it tells you to merge by hand or pass `--force`.
 
 Then start `claude` (ideally inside tmux on an always-on host) and work normally. The activity log accumulates; run the workflows on Friday.
 
@@ -47,6 +47,7 @@ Deterministic CLI tools that turn passively-captured activity and a promise ledg
 | `bun tools/WeeklyReport.ts` | Manager-ready weekly summary (Shipped / In flight / Decisions / Blocked / Next week) | `--week YYYY-MM-DD` (ISO week containing that date; default: current week) |
 | `bun tools/EodSummary.ts` | End-of-day one-liners to review (done/decided/promised/learned/met/blocked) | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/MondayPlan.ts` | Week plan with promises, overdue items, initiatives, and outcome stubs | `--date YYYY-MM-DD` (default: today) |
+| `bun tools/Reconcile.ts` | Org-assigned vs personal initiatives: what feeds what, orphans, and unmapped personal work | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
 | `bun tools/schedule.ts` | Install/run scheduled report delivery via launchd + macOS notifications | `install`, `uninstall`, `status`, `run <job>`, `run-all` |
@@ -74,7 +75,7 @@ Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools re
 
 - `$WORK_DIR/worklog/activity.jsonl` — session activity captured by the hook
 - `$WORK_DIR/WORK_LEDGER.md` — promise ledger (markdown table)
-- `$WORK_DIR/initiatives/` — initiative directories (for MondayPlan)
+- `$WORK_DIR/initiatives/{org,personal}/` — initiative directories, split by provenance: `org/` for formally-assigned work, `personal/` for self-found work (read by MondayPlan and Reconcile)
 - `$WORK_DIR/repos.json` — optional map of repo basename → web base URL (e.g. `{"my-repo": "https://github.com/org/my-repo"}`). When present, WeeklyReport renders commit ids as clickable `<base>/commit/<sha>` links; otherwise ids stay bare text.
 
 ### Scheduled delivery
@@ -105,6 +106,16 @@ bun tools/serve.ts              # http://localhost:3141
 ```
 
 Logs go to `$WORK_DIR/logs/`.
+
+### Weekly archive snapshots
+
+`tools/archive-work.sh` writes a point-in-time tarball of the work-notes repo at HEAD, complementing the continuous git push with recoverable restore points. `workflows/WeeklyReport.md` step 9 runs it after the weekly commit.
+
+```bash
+bash tools/archive-work.sh
+```
+
+It archives to `~/work-archives/` and, when a backup git remote is configured, alongside it — keeping the newest 7 per location and pruning older ones. Every path is overridable: `WORK_DIR`, `ARCHIVE_REMOTE`, `WORK_ARCHIVE_DIR`, `WORK_ARCHIVE_REMOTE_DIR`, `ARCHIVE_KEEP`. With no resolvable remote it warns, writes the local snapshot, and exits 0.
 
 ### Review before sharing
 

@@ -44,7 +44,7 @@ const openPromises = filterByStatus(promises, "open");
 const thisWeekDue = filterByDueWindow(openPromises, start, end);
 const overdue = filterOverdue(promises);
 
-// Discover initiatives — org-assigned (initiatives/) vs personal-provenance (personal/)
+// Discover initiatives — org-assigned (initiatives/org/) vs personal-provenance (initiatives/personal/)
 const { org: orgInitiatives, personal: personalInitiatives } = readInitiatives(workDir);
 
 const lines: string[] = [];
