@@ -51,6 +51,7 @@ Deterministic CLI tools that turn passively-captured activity and a promise ledg
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
 | `bun tools/schedule.ts` | Install/run scheduled report delivery via launchd + macOS notifications | `install`, `uninstall`, `status`, `run <job>`, `run-all` |
+| `bun tools/install-lite.ts --check` | Report whether the lite hook wiring is still in `~/.claude/settings.json` | exit 1 on drift |
 | `bun tools/serve.ts` | Localhost dashboard over the whole work record at http://localhost:3141 | `--port 3141` |
 
 All report tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
@@ -60,6 +61,8 @@ All report tools accept `--out <file>` to write to a file (must resolve under `W
 Run `bun tools/EodSummary.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
 
 ### Skills
+
+> **On enterprise-managed Claude, expect the wiring to be undone.** `install-lite.ts` merges its hooks into `~/.claude/settings.json`. Enterprise Claude has been observed rewriting that file, dropping the merged hooks without any error — the file stays valid, and activity capture silently stops. Check with `bun tools/install-lite.ts --check` (exit 0 = intact, 1 = drifted); re-running the installer restores it, and the install is idempotent so re-running is always safe. Worth checking whenever a session brief looks empty, or on a calendar reminder.
 
 Skills in `skills/` are symlinked into `~/.claude/skills/` by `install-lite.ts` (referenced, never copied — the repo stays source of truth). A pre-existing non-symlink skill of the same name is left untouched.
 

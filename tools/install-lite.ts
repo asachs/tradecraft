@@ -15,6 +15,7 @@
  *
  * Usage:
  *   bun tools/install-lite.ts [--force] [--dry-run]
+ *   bun tools/install-lite.ts --check    # is the wiring still in place?
  *   WORK_DIR=~/work bun tools/install-lite.ts
  */
 import {
@@ -27,6 +28,7 @@ import {
   symlinkSync,
   lstatSync,
   readlinkSync,
+  statSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve, dirname } from "node:path";
@@ -126,6 +128,114 @@ export function injectImport(existing: string | null, scaffoldDir: string): stri
   if (existing === null || existing.trim() === "") return block;
   const sep = existing.endsWith("\n") ? "\n" : "\n\n";
   return existing + sep + block;
+}
+
+// ── Drift check ──
+
+export interface WiringCheck {
+  name: string;
+  ok: boolean;
+  detail: string;
+}
+
+/** Every hook command string in a settings object, across all events. */
+function hookCommands(settings: Record<string, unknown>): string[] {
+  const out: string[] = [];
+  const hooks = settings.hooks;
+  if (!hooks || typeof hooks !== "object") return out;
+  for (const groups of Object.values(hooks as Record<string, unknown>)) {
+    if (!Array.isArray(groups)) continue;
+    for (const group of groups) {
+      const inner = (group as { hooks?: unknown }).hooks;
+      if (!Array.isArray(inner)) continue;
+      for (const h of inner) {
+        const cmd = (h as { command?: unknown }).command;
+        if (typeof cmd === "string") out.push(cmd);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Report whether the lite wiring is still in place.
+ *
+ * Enterprise-managed Claude has been observed rewriting ~/.claude/settings.json,
+ * silently dropping the merged hooks (issue #7). The install is additive and
+ * idempotent, so recovery is just a re-run — the hard part is noticing, since an
+ * unwired hook cannot report its own absence. This makes that a question you can
+ * ask. Read-only: it never writes.
+ */
+export function checkLiteInstall(opts: {
+  scaffoldDir: string;
+  claudeDir: string;
+  workDir: string;
+  /** Days before a stale activity log counts as drift. */
+  staleDays?: number;
+  now?: Date;
+}): WiringCheck[] {
+  const { scaffoldDir, claudeDir, workDir } = opts;
+  const staleDays = opts.staleDays ?? 7;
+  const now = opts.now ?? new Date();
+  const checks: WiringCheck[] = [];
+  const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail });
+
+  const settingsPath = join(claudeDir, "settings.json");
+  let settings: Record<string, unknown> | null = null;
+  try {
+    settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+  } catch {
+    settings = null;
+  }
+
+  if (settings === null) {
+    add("settings.json readable", false, `missing or unparseable: ${settingsPath}`);
+  } else {
+    add("settings.json readable", true, settingsPath);
+  }
+
+  const commands = settings ? hookCommands(settings) : [];
+  for (const [label, rel] of [
+    ["SessionStart brief hook", "hooks/WorkBrief.hook.ts"],
+    ["Stop activity hook", "hooks/SessionActivityLog.hook.ts"],
+  ] as const) {
+    const wanted = join(scaffoldDir, rel);
+    const wired = commands.some((c) => c.includes(wanted));
+    add(
+      label,
+      wired,
+      wired ? wanted : `not wired in settings.json — re-run: bun ${join(scaffoldDir, "tools/install-lite.ts")}`
+    );
+  }
+
+  const importLine = `@${join(scaffoldDir, "CLAUDE.md")}`;
+  let md = "";
+  try {
+    md = readFileSync(join(claudeDir, "CLAUDE.md"), "utf-8");
+  } catch {
+    md = "";
+  }
+  const hasImport = md.includes(importLine);
+  add("CLAUDE.md import", hasImport, hasImport ? importLine : "import line absent from ~/.claude/CLAUDE.md");
+
+  // The strongest signal: is the activity hook actually firing? This catches a
+  // clobber regardless of cause, including one that leaves settings.json valid.
+  const activity = join(workDir, "worklog", "activity.jsonl");
+  if (!existsSync(activity)) {
+    add("activity log", false, `no ${activity} yet — the Stop hook has never fired`);
+  } else {
+    const ageDays = (now.getTime() - statSync(activity).mtime.getTime()) / 86_400_000;
+    const fresh = ageDays <= staleDays;
+    add(
+      "activity log",
+      fresh,
+      fresh
+        ? `last written ${Math.floor(ageDays)}d ago`
+        : `last written ${Math.floor(ageDays)}d ago — hook may have been unwired`
+    );
+  }
+
+  return checks;
 }
 
 export function runInstallLite(opts: LiteInstallOptions): LiteInstallResult {
@@ -257,6 +367,23 @@ if (import.meta.main) {
   const scaffoldDir = resolve(dirname(import.meta.path), "..");
   const claudeDir = join(homedir(), ".claude");
   const workDir = resolveWorkDir();
+
+  if (args.includes("--check")) {
+    const checks = checkLiteInstall({ scaffoldDir, claudeDir, workDir });
+    console.log("Tradecraft lite wiring check\n");
+    let failures = 0;
+    for (const c of checks) {
+      if (!c.ok) failures++;
+      console.log(`  [${c.ok ? "OK  " : "DRIFT"}] ${c.name}`);
+      console.log(`          ${c.detail}`);
+    }
+    console.log(
+      failures === 0
+        ? "\nWiring intact."
+        : `\n${failures} of ${checks.length} checks drifted. The install is additive and idempotent — re-run it:\n  bun ${join(scaffoldDir, "tools/install-lite.ts")}`
+    );
+    process.exit(failures > 0 ? 1 : 0);
+  }
 
   console.log(`Tradecraft lite install${dryRun ? " (dry run)" : ""}`);
   console.log(`  scaffold : ${scaffoldDir}`);

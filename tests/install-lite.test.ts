@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import {
   buildLiteSnippet,
+  checkLiteInstall,
   mergePermissions,
   injectImport,
   runInstallLite,
@@ -206,5 +207,88 @@ describe("runInstallLite", () => {
       expect(cmd).not.toContain("osascript");
       expect(cmd).not.toContain("launchctl");
     }
+  });
+});
+
+describe("checkLiteInstall", () => {
+  /** Install for real, then report what the checker sees. */
+  function installed() {
+    const claudeDir = tmp("tc-claude-");
+    const workDir = tmp("tc-work-");
+    runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+    writeFileSync(join(workDir, "worklog", "activity.jsonl"), "{}\n");
+    return { claudeDir, workDir };
+  }
+
+  const byName = (checks: ReturnType<typeof checkLiteInstall>, name: string) =>
+    checks.find((c) => c.name === name)!;
+
+  test("reports intact wiring after a fresh install", () => {
+    const { claudeDir, workDir } = installed();
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(checks.every((c) => c.ok)).toBe(true);
+  });
+
+  test("detects settings.json being overwritten wholesale", () => {
+    // Exactly the enterprise-Claude failure in #7: the file is valid, the
+    // merged hooks are simply gone.
+    const { claudeDir, workDir } = installed();
+    writeFileSync(join(claudeDir, "settings.json"), JSON.stringify({ hooks: {} }, null, 2));
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(byName(checks, "SessionStart brief hook").ok).toBe(false);
+    expect(byName(checks, "Stop activity hook").ok).toBe(false);
+    expect(byName(checks, "settings.json readable").ok).toBe(true);
+  });
+
+  test("points at the re-run command when wiring has drifted", () => {
+    const { claudeDir, workDir } = installed();
+    writeFileSync(join(claudeDir, "settings.json"), "{}");
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(byName(checks, "Stop activity hook").detail).toContain("install-lite.ts");
+  });
+
+  test("detects a missing or unparseable settings.json", () => {
+    const { claudeDir, workDir } = installed();
+    writeFileSync(join(claudeDir, "settings.json"), "{ not json");
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(byName(checks, "settings.json readable").ok).toBe(false);
+  });
+
+  test("detects the CLAUDE.md import being stripped", () => {
+    const { claudeDir, workDir } = installed();
+    writeFileSync(join(claudeDir, "CLAUDE.md"), "# org policy only\n");
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(byName(checks, "CLAUDE.md import").ok).toBe(false);
+  });
+
+  test("flags an activity log that has stopped being written", () => {
+    const { claudeDir, workDir } = installed();
+    const future = new Date(Date.now() + 30 * 86_400_000);
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir, now: future });
+    const log = byName(checks, "activity log");
+    expect(log.ok).toBe(false);
+    expect(log.detail).toContain("may have been unwired");
+  });
+
+  test("flags an activity log that never appeared", () => {
+    const claudeDir = tmp("tc-claude-");
+    const workDir = tmp("tc-work-");
+    runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(byName(checks, "activity log").detail).toContain("never fired");
+  });
+
+  test("writes nothing", () => {
+    const { claudeDir, workDir } = installed();
+    const before = readFileSync(join(claudeDir, "settings.json"), "utf-8");
+    checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
+    expect(readFileSync(join(claudeDir, "settings.json"), "utf-8")).toBe(before);
+    expect(existsSync(join(claudeDir, "settings.json.check"))).toBe(false);
   });
 });
