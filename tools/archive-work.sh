@@ -64,4 +64,6 @@ prune() {
   done
 }
 prune "$LOCAL_DIR"
-[ -n "$REMOTE_ARCHIVE_DIR" ] && prune "$REMOTE_ARCHIVE_DIR"
+if [ -n "$REMOTE_ARCHIVE_DIR" ]; then
+  prune "$REMOTE_ARCHIVE_DIR"
+fi
