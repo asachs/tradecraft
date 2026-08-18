@@ -62,6 +62,30 @@ const WORK_SAFE_SKILLS = [
 /** Profile subdirectories to copy in full (recursively). */
 const PROFILE_COPY_DIRS = ["ALGORITHM", "DOCUMENTATION", "TOOLS"];
 
+/**
+ * Directory names never copied, at any depth.
+ *
+ * The whitelists above choose which top-level trees to carry; without this
+ * every vendored dependency inside them came too. A single whitelisted skill
+ * with a node_modules/ contributed 37k files to the manifest.
+ */
+const EXCLUDED_DIRS = new Set([
+  "node_modules",
+  ".git",
+  ".venv",
+  "venv",
+  "__pycache__",
+  ".cache",
+  ".pytest_cache",
+  "dist",
+  "build",
+  ".next",
+  "target",
+]);
+
+/** Warn when the manifest is large enough to suggest an exclusion has been missed. */
+const MANIFEST_WARN_THRESHOLD = 5000;
+
 /** Hook subdirectories to copy in full (recursively). */
 const HOOK_COPY_DIRS = ["lib", "security"];
 
@@ -120,6 +144,7 @@ function walk(base: string, rel = ""): string[] {
     const entryRel = rel ? `${rel}/${entry}` : entry;
     try {
       if (statSync(full).isDirectory()) {
+        if (EXCLUDED_DIRS.has(entry)) continue;
         results.push(...walk(full, entryRel));
       } else {
         results.push(entryRel);
@@ -220,6 +245,13 @@ if (missing.length > 0) {
   }
 }
 
+if (manifest.length > MANIFEST_WARN_THRESHOLD) {
+  console.error(
+    `warning: manifest is ${manifest.length} files — larger than expected for a curated ` +
+      `work profile. Check for a vendored directory that EXCLUDED_DIRS does not cover.`
+  );
+}
+
 console.log(`\nManifest (${manifest.length} files):`);
 for (const entry of manifest) {
   console.log(`  ${entry.archivePath}`);
@@ -233,7 +265,7 @@ if (dryRun) {
 // ── Build tarball via staging directory (BSD tar compatible) ──
 
 const dateStr = formatDate(new Date());
-const archiveName = `pai-work-profile-${dateStr}.tar.gz`;
+const archiveName = `lifeos-work-profile-${dateStr}.tar.gz`;
 
 if (!existsSync(outDir)) {
   mkdirSync(outDir, { recursive: true });

@@ -24,6 +24,14 @@ function createFakeProfile(base: string) {
   mkdirSync(join(profile, "DOCUMENTATION", "sub"), { recursive: true });
   writeFileSync(join(profile, "DOCUMENTATION", "sub", "nested.md"), "nested");
 
+  // Vendored dirs that must never reach the archive, at several depths
+  mkdirSync(join(profile, "TOOLS", "node_modules", "left-pad"), { recursive: true });
+  writeFileSync(join(profile, "TOOLS", "node_modules", "left-pad", "index.js"), "module.exports=1;");
+  mkdirSync(join(profile, "DOCUMENTATION", "sub", "__pycache__"), { recursive: true });
+  writeFileSync(join(profile, "DOCUMENTATION", "sub", "__pycache__", "x.pyc"), "bytecode");
+  mkdirSync(join(profile, "ALGORITHM", ".git"), { recursive: true });
+  writeFileSync(join(profile, "ALGORITHM", ".git", "HEAD"), "ref: refs/heads/main");
+
   // Hooks
   const hooksDir = join(claude, "hooks");
   mkdirSync(hooksDir, { recursive: true });
@@ -212,5 +220,37 @@ describe("build-work-archive", () => {
     // No .staging-* dirs should remain
     const leftover = readdirSync(outDir).filter((f) => f.startsWith(".staging-"));
     expect(leftover.length).toBe(0);
+  });
+
+  test("excludes vendored directories from the manifest", () => {
+    const fakeHome = join(tmpDir, "home");
+    mkdirSync(fakeHome);
+    createFakeProfile(fakeHome);
+
+    const { stdout, exitCode } = runArchiveBuilder(["--dry-run"], fakeHome);
+    expect(exitCode).toBe(0);
+    expect(stdout).not.toContain("node_modules");
+    expect(stdout).not.toContain("__pycache__");
+    expect(stdout).not.toContain(".git/HEAD");
+    // The real content beside them still ships.
+    expect(stdout).toContain("LIFEOS/TOOLS/test.md");
+    expect(stdout).toContain("LIFEOS/DOCUMENTATION/sub/nested.md");
+  });
+
+  test("excluded directories do not reach the built archive", () => {
+    const fakeHome = join(tmpDir, "home");
+    mkdirSync(fakeHome);
+    createFakeProfile(fakeHome);
+    const outDir = join(tmpDir, "out");
+
+    const { exitCode } = runArchiveBuilder(["--out", outDir], fakeHome);
+    expect(exitCode).toBe(0);
+
+    const archive = readdirSync(outDir).find((f) => f.endsWith(".tar.gz"));
+    expect(archive).toBeDefined();
+    const listed = Bun.spawnSync({ cmd: ["tar", "tzf", join(outDir, archive!)] })
+      .stdout.toString();
+    expect(listed).not.toContain("node_modules");
+    expect(listed).not.toContain("__pycache__");
   });
 });
