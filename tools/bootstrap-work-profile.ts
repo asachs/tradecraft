@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * bootstrap-work-profile.ts — Set up the PAI work profile on a fresh work machine.
+ * bootstrap-work-profile.ts — Set up the LifeOS work profile on a fresh work machine.
  *
- * Takes a PAI work archive (from build-work-archive.ts) and this scaffold repo's
+ * Takes a LifeOS work archive (from build-work-archive.ts) and this scaffold repo's
  * templates/ directory, then creates the full ~/.claude/ work profile.
  *
  * Usage:
@@ -18,11 +18,12 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve, dirname } from "node:path";
+import { PROFILE_DIR_NAME } from "./lib/config.ts";
 
 const SCAFFOLD_DIR = resolve(dirname(import.meta.path), "..");
 const TEMPLATES_DIR = join(SCAFFOLD_DIR, "templates");
 const CLAUDE_DIR = join(homedir(), ".claude");
-const PAI_DIR = join(CLAUDE_DIR, "PAI");
+const PROFILE_DIR = join(CLAUDE_DIR, PROFILE_DIR_NAME);
 const WORK_DIR = process.env.WORK_DIR ?? join(homedir(), "work");
 
 const MEMORY_DIRS = [
@@ -83,8 +84,8 @@ function copyIfMissing(src: string, dest: string, description: string) {
 // ── Step 1: Extract archive ──
 
 if (archive) {
-  console.log("\n[1/8] Extracting archive to ~/.claude/PAI/...");
-  ensureDir(PAI_DIR);
+  console.log(`\n[1/8] Extracting archive to ~/.claude/${PROFILE_DIR_NAME}/...`);
+  ensureDir(PROFILE_DIR);
 
   const proc = Bun.spawn(["tar", "xzf", archive, "-C", CLAUDE_DIR], {
     stdout: "pipe",
@@ -105,23 +106,23 @@ if (archive) {
 
 console.log("\n[2/8] Creating memory directories...");
 for (const dir of MEMORY_DIRS) {
-  ensureDir(join(PAI_DIR, dir));
+  ensureDir(join(PROFILE_DIR, dir));
 }
 
 // ── Step 3: Install identity files ──
 
 console.log("\n[3/8] Installing identity files...");
-ensureDir(join(PAI_DIR, "USER"));
+ensureDir(join(PROFILE_DIR, "USER"));
 
 copyIfMissing(
   join(TEMPLATES_DIR, "WORK_IDENTITY.md"),
-  join(PAI_DIR, "USER", "WORK_IDENTITY.md"),
+  join(PROFILE_DIR, "USER", "WORK_IDENTITY.md"),
   "WORK_IDENTITY.md"
 );
 
 copyIfMissing(
   join(TEMPLATES_DIR, "DA_IDENTITY_WORK.md"),
-  join(PAI_DIR, "USER", "DA_IDENTITY_WORK.md"),
+  join(PROFILE_DIR, "USER", "DA_IDENTITY_WORK.md"),
   "DA_IDENTITY_WORK.md"
 );
 
@@ -202,6 +203,6 @@ if (existsSync(verifyScript)) {
 
 console.log("\n--- Bootstrap complete ---");
 console.log("Next steps:");
-console.log("  1. Edit ~/.claude/PAI/USER/WORK_IDENTITY.md with your details");
+console.log(`  1. Edit ~/.claude/${PROFILE_DIR_NAME}/USER/WORK_IDENTITY.md with your details`);
 console.log("  2. Populate ~/src/tradecraft/company.md after weeks 1-2");
 console.log("  3. Start claude and verify with: 'What do you know about my personal life?'");

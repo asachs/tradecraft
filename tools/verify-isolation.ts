@@ -1,48 +1,90 @@
 #!/usr/bin/env bun
 /**
- * verify-isolation.ts — Confirm no personal PAI leakage on the work machine.
+ * verify-isolation.ts — Confirm no personal LifeOS leakage on the work machine.
  *
  * Runnable anytime. Checks that personal-only directories, files, and patterns
- * are absent from ~/.claude/. Exit 0 = all clear, exit 1 = issues found.
+ * are absent from ~/.claude/.
+ *
+ * Exit 0 = all clear, 1 = leakage found, 2 = ~/.claude is not a work profile
+ * (wrong machine — the checks would report the whole personal install as
+ * "unexpected", which is noise, not a finding).
  *
  * Usage:
- *   bun tools/verify-isolation.ts [--verbose]
+ *   bun tools/verify-isolation.ts [--verbose] [--force]
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { PROFILE_DIR_NAME } from "./lib/config.ts";
 
 const CLAUDE_DIR = join(homedir(), ".claude");
-const PAI_DIR = join(CLAUDE_DIR, "PAI");
+const PROFILE_DIR = join(CLAUDE_DIR, PROFILE_DIR_NAME);
 
 const verbose = process.argv.includes("--verbose");
+const force = process.argv.includes("--force");
+
+/** Cap on how many "unexpected" entries to print before summarising the rest. */
+const MAX_LISTED = 10;
+
+/**
+ * A work profile is installed by install.ts (repo CLAUDE.md) or
+ * bootstrap-work-profile.ts (templates/work-claude.md). Both leave a
+ * "work profile" header in ~/.claude/CLAUDE.md. Without it we are almost
+ * certainly on a personal machine, where every hook and skill is "unexpected"
+ * and the report is meaningless.
+ */
+function looksLikeWorkProfile(): boolean {
+  try {
+    return /work profile/i.test(readFileSync(join(CLAUDE_DIR, "CLAUDE.md"), "utf-8"));
+  } catch {
+    return false;
+  }
+}
+
+if (!force && !looksLikeWorkProfile()) {
+  console.error(`verify-isolation: ${CLAUDE_DIR} does not look like a work profile install.`);
+  console.error("  No \"work profile\" marker found in CLAUDE.md.");
+  console.error("  This tool audits an installed work profile — run it on the work machine.");
+  console.error("  Use --force to audit anyway.");
+  process.exit(2);
+}
+
+/** Render an "unexpected: ..." detail, truncated so real failures stay readable. */
+function unexpectedDetail(items: string[]): string | undefined {
+  if (items.length === 0) return undefined;
+  const shown = items.slice(0, MAX_LISTED).join(", ");
+  const rest = items.length - MAX_LISTED;
+  return rest > 0
+    ? `${items.length} unexpected: ${shown}, and ${rest} more`
+    : `unexpected: ${shown}`;
+}
 
 // ── Check definitions ──
 
 const FORBIDDEN_DIRS = [
-  "PAI/MEMORY/RELATIONSHIP",
-  "PAI/MEMORY/KNOWLEDGE",
-  "PAI/MEMORY/BOOKMARKS",
-  "PAI/MEMORY/DATA",
-  "PAI/MEMORY/WISDOM",
-  "PAI/MEMORY/VOICE",
-  "PAI/MEMORY/AUTO",
-  "PAI/MEMORY/SCRATCHPAD",
-  "PAI/USER/TELOS",
-  "PAI/USER/HEALTH",
-  "PAI/USER/FINANCES",
-  "PAI/USER/BUSINESS",
+  `${PROFILE_DIR_NAME}/MEMORY/RELATIONSHIP`,
+  `${PROFILE_DIR_NAME}/MEMORY/KNOWLEDGE`,
+  `${PROFILE_DIR_NAME}/MEMORY/BOOKMARKS`,
+  `${PROFILE_DIR_NAME}/MEMORY/DATA`,
+  `${PROFILE_DIR_NAME}/MEMORY/WISDOM`,
+  `${PROFILE_DIR_NAME}/MEMORY/VOICE`,
+  `${PROFILE_DIR_NAME}/MEMORY/AUTO`,
+  `${PROFILE_DIR_NAME}/MEMORY/SCRATCHPAD`,
+  `${PROFILE_DIR_NAME}/USER/TELOS`,
+  `${PROFILE_DIR_NAME}/USER/HEALTH`,
+  `${PROFILE_DIR_NAME}/USER/FINANCES`,
+  `${PROFILE_DIR_NAME}/USER/BUSINESS`,
 ];
 
 const FORBIDDEN_FILES = [
-  "PAI/USER/OUR_STORY.md",
-  "PAI/USER/OPINIONS.md",
-  "PAI/USER/PRINCIPAL_IDENTITY.md",
-  "PAI/USER/RESUME.md",
-  "PAI/USER/CORECONTENT.md",
-  "PAI/USER/WRITINGSTYLE.md",
-  "PAI/USER/RHETORICALSTYLE.md",
-  "PAI/USER/AI_WRITING_PATTERNS.md",
+  `${PROFILE_DIR_NAME}/USER/OUR_STORY.md`,
+  `${PROFILE_DIR_NAME}/USER/OPINIONS.md`,
+  `${PROFILE_DIR_NAME}/USER/PRINCIPAL_IDENTITY.md`,
+  `${PROFILE_DIR_NAME}/USER/RESUME.md`,
+  `${PROFILE_DIR_NAME}/USER/CORECONTENT.md`,
+  `${PROFILE_DIR_NAME}/USER/WRITINGSTYLE.md`,
+  `${PROFILE_DIR_NAME}/USER/RHETORICALSTYLE.md`,
+  `${PROFILE_DIR_NAME}/USER/AI_WRITING_PATTERNS.md`,
 ];
 
 const FORBIDDEN_PATTERNS = [
@@ -144,8 +186,8 @@ const filesToScan = [
   join(CLAUDE_DIR, "CLAUDE.md"),
 ];
 
-// Also scan PAI/USER/ if it exists
-const userDir = join(PAI_DIR, "USER");
+// Also scan the profile's USER/ if it exists
+const userDir = join(PROFILE_DIR, "USER");
 if (existsSync(userDir)) {
   try {
     for (const f of readdirSync(userDir)) {
@@ -176,7 +218,7 @@ if (existsSync(hooksDir)) {
   check(
     "only whitelisted hooks",
     unexpected.length === 0,
-    unexpected.length > 0 ? `unexpected: ${unexpected.join(", ")}` : undefined
+    unexpectedDetail(unexpected)
   );
 } else {
   check("only whitelisted hooks", true, "no hooks dir (ok — not yet bootstrapped)");
@@ -194,7 +236,7 @@ if (existsSync(skillsDir)) {
   check(
     "only whitelisted skills",
     unexpected.length === 0,
-    unexpected.length > 0 ? `unexpected: ${unexpected.join(", ")}` : undefined
+    unexpectedDetail(unexpected)
   );
 } else {
   check("only whitelisted skills", true, "no skills dir (ok — not yet bootstrapped)");
@@ -218,7 +260,7 @@ if (existsSync(settingsPath)) {
 
 // ── Report ──
 
-console.log("\n=== PAI Work Profile — Isolation Verification ===\n");
+console.log("\n=== LifeOS Work Profile — Isolation Verification ===\n");
 
 let failures = 0;
 for (const r of results) {

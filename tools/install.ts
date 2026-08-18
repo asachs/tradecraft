@@ -3,10 +3,10 @@
  * install.ts — Script the generic starter-kit install (the README "Bootstrap").
  *
  * Lays down the patterns-only work brain on a machine that already runs
- * Claude Code — no PAI required. Idempotent: re-runs skip what already exists,
+ * Claude Code — no LifeOS required. Idempotent: re-runs skip what already exists,
  * and the settings merge backs up any file it touches.
  *
- * For the full PAI-on-work-machine path (PAI archive, identity files, memory
+ * For the full LifeOS-on-work-machine path (LifeOS archive, identity files, memory
  * dirs), use bootstrap-work-profile.ts instead.
  *
  * Usage:
