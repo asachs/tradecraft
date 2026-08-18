@@ -78,7 +78,8 @@ describe("runInstall", () => {
     runInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
 
     expect(existsSync(join(workDir, "worklog/eod"))).toBe(true);
-    expect(existsSync(join(workDir, "initiatives"))).toBe(true);
+    expect(existsSync(join(workDir, "initiatives/org"))).toBe(true);
+    expect(existsSync(join(workDir, "initiatives/personal"))).toBe(true);
     expect(existsSync(join(workDir, "reports"))).toBe(true);
     expect(existsSync(join(workDir, "WORK_LEDGER.md"))).toBe(true);
     expect(existsSync(join(workDir, "BRAG.md"))).toBe(true);

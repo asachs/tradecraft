@@ -106,7 +106,7 @@ export function runInstall(opts: InstallOptions): InstallResult {
 
   // [1/5] Work directories — decisions live per-initiative, not top-level.
   log("\n[1/5] Creating work directories...");
-  for (const sub of ["worklog/eod", "initiatives", "reports"]) {
+  for (const sub of ["worklog/eod", "initiatives/org", "initiatives/personal", "reports"]) {
     ensureDir(join(workDir, sub));
   }
 
