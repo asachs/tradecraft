@@ -51,7 +51,7 @@ Deterministic CLI tools that turn passively-captured activity and a promise ledg
 | `bun tools/DailyBrief.ts` | Yesterday's activity summary plus today's and overdue promises | `--date YYYY-MM-DD` (default: today) |
 | `bun tools/BragHarvest.ts` | Sweep `[BRAG?]`-tagged EOD lines into BRAG.md stub entries | `--week YYYY-MM-DD` (ISO week; default: current week) |
 | `bun tools/schedule.ts` | Install/run scheduled report delivery via launchd + macOS notifications | `install`, `uninstall`, `status`, `run <job>`, `run-all` |
-| `bun tools/serve.ts` | Localhost report dashboard at http://localhost:3141 | `--port 3141` |
+| `bun tools/serve.ts` | Localhost dashboard over the whole work record at http://localhost:3141 | `--port 3141` |
 
 All report tools accept `--out <file>` to write to a file (must resolve under `WORK_DIR`). Without `--out`, output goes to stdout only.
 
@@ -99,11 +99,19 @@ Default schedule (all times Europe/Dublin):
 | `weekly-report` | Fri 16:00 | WeeklyReport → reports/weekly-report/ |
 | `brag-harvest` | Fri 16:30 | BragHarvest sweep |
 
-Reports are viewable with any editor or via the built-in dashboard:
+### Dashboard
 
 ```bash
 bun tools/serve.ts              # http://localhost:3141
 ```
+
+Read-only browser over the whole of `$WORK_DIR`, not just generated reports. The home page cards the major sections — initiatives, meetings, briefs, observations, worklog, reports — with file counts, and pins `WORK_LEDGER.md`, `BRAG.md`, and `initiatives/REGISTRY.md`.
+
+- **Tables render as tables.** The registry, the promise ledger, and any tabulated report display as HTML rather than raw pipes.
+- **Initiative progress is visible.** Any directory with an `ISA.md` shows a bar and an `n/total` count of criteria met, in listings and at the top of the document.
+- **Criteria read as checkmarks.** `- [x]` and `- [ ]` render as status markers rather than literal brackets.
+
+Everything lives under `/browse/<path>`, mirroring the directory layout. The server is read-only and refuses anything outside `$WORK_DIR` — traversal, absolute paths, and symlinks pointing out of the tree all 404. Only text formats are served (`.md`, `.txt`, `.json`, `.jsonl`, `.yaml`, `.yml`); `logs/`, `node_modules/`, and dotfiles are never listed.
 
 Logs go to `$WORK_DIR/logs/`.
 
