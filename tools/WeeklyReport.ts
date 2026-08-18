@@ -6,7 +6,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolveWorkDir, loadRepoLinks } from "./lib/config.ts";
+import { resolveWorkDir, loadRepoLinks, isUnderWorkDir } from "./lib/config.ts";
 import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/activity.ts";
 import { parseLedger, filterByStatus, filterOverdue, filterByDueWindow } from "./lib/ledger.ts";
 import { parseEodFiles, filterEodByWindow } from "./lib/eod.ts";
@@ -42,8 +42,7 @@ const workDir = resolveWorkDir();
 
 // Validate --out is under WORK_DIR
 if (out) {
-  const resolved = resolve(out);
-  if (!resolved.startsWith(workDir)) {
+  if (!isUnderWorkDir(workDir, out)) {
     console.error(`error: --out path must be under WORK_DIR (${workDir})`);
     process.exit(1);
   }

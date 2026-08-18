@@ -3,7 +3,7 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { resolve } from "node:path";
+import { isAbsolute, relative, resolve } from "node:path";
 
 /** Expand leading ~ to the user's home directory. */
 function expandTilde(p: string): string {
@@ -19,6 +19,22 @@ function expandTilde(p: string): string {
 export function resolveWorkDir(): string {
   const raw = process.env.WORK_DIR ?? "~/work";
   return resolve(expandTilde(raw));
+}
+
+/**
+ * True when `candidate` resolves to a path strictly inside `workDir`.
+ *
+ * Used to contain `--out` writes. A plain `startsWith` prefix test is wrong:
+ * `resolve()` strips trailing separators, so `/home/u/work-archives` shares a
+ * prefix with `/home/u/work` and would pass. Compare via path segments instead.
+ * `candidate === workDir` is rejected — `--out` names a file, not the dir.
+ *
+ * Note: comparison is case-sensitive and does not resolve symlinks; this guards
+ * against mistakes, not a determined caller (who could just redirect stdout).
+ */
+export function isUnderWorkDir(workDir: string, candidate: string): boolean {
+  const rel = relative(resolve(workDir), resolve(candidate));
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
 }
 
 /**

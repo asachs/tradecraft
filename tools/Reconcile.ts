@@ -11,7 +11,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolveWorkDir } from "./lib/config.ts";
+import { resolveWorkDir, isUnderWorkDir } from "./lib/config.ts";
 import { readInitiatives, reconcile, candidateOrg } from "./lib/initiatives.ts";
 import { parseDate, formatDate } from "./lib/dates.ts";
 
@@ -30,8 +30,7 @@ const { date, out } = parseArgs();
 const workDir = resolveWorkDir();
 
 if (out) {
-  const resolved = resolve(out);
-  if (!resolved.startsWith(workDir)) {
+  if (!isUnderWorkDir(workDir, out)) {
     console.error(`error: --out path must be under WORK_DIR (${workDir})`);
     process.exit(1);
   }
