@@ -38,7 +38,7 @@ Then start `claude` (ideally inside tmux on an always-on host) and work normally
 
 ## Report engine
 
-Deterministic CLI tools that turn passively-captured activity and a promise ledger into review-ready markdown drafts. No LLM calls, no network access, no external dependencies — just bun + TypeScript.
+Deterministic CLI tools that turn passively-captured activity and a promise ledger into review-ready markdown drafts. No LLM calls, no network access, no runtime dependencies — just bun + TypeScript. (The only dev dependencies are `typescript` and `@types/bun`, used for the typecheck; nothing is fetched when the tools run.)
 
 ### Tools
 
@@ -124,8 +124,12 @@ These tools **draft** to stdout or local files. You review, edit, and send — n
 ### Running tests
 
 ```bash
-bun test
+bun install     # dev dependencies for the typecheck (first time only)
+bun test        # 192 tests
+bun run typecheck   # tsc --noEmit, strict
 ```
+
+`bun test` does not typecheck — `bun run typecheck` is the separate gate.
 
 ## License / provenance
 

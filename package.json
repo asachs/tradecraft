@@ -1,0 +1,15 @@
+{
+  "name": "tradecraft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code work profile — ISA-first methodology, activity capture, and review-ready drafts",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^7.0.2"
+  }
+}
