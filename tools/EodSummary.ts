@@ -9,7 +9,7 @@
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { resolveWorkDir, loadRepoLinks } from "./lib/config.ts";
+import { resolveWorkDir, loadRepoLinks, isUnderWorkDir } from "./lib/config.ts";
 import { linkifyCommit } from "./lib/links.ts";
 import { parseActivityLog, filterByDateWindow, groupByRepoBranch } from "./lib/activity.ts";
 import { parseLedger, filterByDueWindow } from "./lib/ledger.ts";
@@ -43,8 +43,7 @@ if (save && out) {
 }
 
 if (out) {
-  const resolved = resolve(out);
-  if (!resolved.startsWith(workDir)) {
+  if (!isUnderWorkDir(workDir, out)) {
     console.error(`error: --out path must be under WORK_DIR (${workDir})`);
     process.exit(1);
   }
