@@ -10,7 +10,7 @@ The existing install paths assume a machine the operator fully controls. On a ma
 2. `bootstrap-work-profile.ts --force` overwrites `~/.claude/CLAUDE.md` and `settings.json` wholesale — destroying the operator's org-policy CLAUDE.md and the SSH-warning hook.
 3. `work-settings.json` wires 9 PreToolUse/PostToolUse hooks that don't exist in this repo (they ship in the external PAI archive) and grants blanket `Bash`.
 
-`~/.claude/CLAUDE.md` and `settings.json` are confirmed **user-owned** (not MDM-redeployed), so an additive, merge-based install is durable.
+`~/.claude/CLAUDE.md` and `settings.json` are confirmed **user-owned** (not MDM-redeployed), so an additive, merge-based install is durable. **[FALSIFIED 2026-08-18 — see the note at the end of this file. `settings.json` is not durable under enterprise Claude.]**
 
 ## Goal
 
@@ -45,3 +45,23 @@ A single additive installer (`install-lite.ts`) plus one `SessionStart` hook (`W
 - ISC-7: the org-policy CLAUDE.md ("SSH commands are blocked…") was preserved verbatim with the `@<repo>/CLAUDE.md` import appended under a marker comment; `CLAUDE.md.bak` holds the original. Second run: "skipped (already wired)" / "skipped (import already present)" — `installed: 0`; single import line, single `Bash(bun *)` entry (idempotency test asserts this).
 - ISC-8: install-lite.test.ts anti-test asserts the written settings contain no `launchctl` / `.plist` and no hook command contains `osascript`/`launchct`. `schedule.ts` left untouched and uninstalled.
 - Hygiene: an identity/employer-string sweep over all 5 new files → clean; `bun tools/verify-clean.ts` → "no identity/employer strings found".
+
+---
+
+## Falsified assumption — 2026-08-18
+
+The Problem section above asserts that `~/.claude/settings.json` is user-owned and therefore that a merged install is durable. **That is wrong**, and the whole lite design rested on it.
+
+Observed in the field (issue #7): under enterprise-managed Claude, `settings.json` is rewritten and the merged `SessionStart` / `Stop` hooks disappear. The file stays valid JSON, so nothing errors — capture just stops. An unwired hook cannot report its own absence, which is what makes this failure quiet enough to go unnoticed for weeks.
+
+What holds and what does not:
+
+| Assumption | Status |
+|---|---|
+| `settings.json` merge is durable | **False** — rewritten by enterprise Claude |
+| `CLAUDE.md` `@import` append is durable | Unverified — plausible, but it is the same class of claim that just failed |
+| Install is additive and idempotent, so re-running recovers | Holds — recovery was never the hard part |
+
+The design is not being changed: an additive merge is still the right shape, and re-running restores the wiring. What changes is that drift is now *detectable* rather than assumed away — `bun tools/install-lite.ts --check` reports whether the wiring is still present and exits non-zero when it is not.
+
+Kept as a dated record. The claim above is left in place with a marker rather than edited away, because the point of this file is what was believed at the time.
