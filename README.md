@@ -72,19 +72,135 @@ Not in the repo and never committed: `company.md` (employer-specific context) an
 3. **Review before sharing.** The tools draft; you decide what to do with the output. Anything shared carries ordinary discretion — your own words, ticket IDs by reference, no code, secrets, or customer data — and only after you've reviewed it.
 4. **Generated, then edited.** Reports are drafted by the work brain from the activity log; the human edits and sends. Nothing auto-sends.
 
-## Bootstrap on a fresh work machine/VM
+## Install
+
+Written to be followed step by step, by a person or an agent. Every step states what to run, what success looks like, and what to do when it fails. Nothing here needs network access beyond the initial clone.
+
+### 0. Prerequisites
+
+```bash
+bun --version    # any 1.x; the tools are bun-only, there is no node fallback
+git --version    # used by the report tools to attribute commit activity
+```
+
+If `bun` is missing, install it from https://bun.sh and re-check. **Stop if `bun` is unavailable** — nothing else in this repo will run.
+
+### 1. Clone
 
 ```bash
 git clone <this-repo> ~/src/tradecraft
 cd ~/src/tradecraft
-bun tools/install.ts          # --dry-run to preview · --force to overwrite · WORK_DIR=… to relocate
+bun install      # dev dependencies for the typecheck only; tools need nothing at runtime
+bun test         # expect "0 fail"; a failure here means the checkout is bad, not your machine
 ```
 
-`install.ts` is idempotent. It creates `~/work/{worklog,initiatives/{org,personal},reports}`, seeds `WORK_LEDGER.md` and `BRAG.md`, installs the work-profile `CLAUDE.md` and the `SessionActivityLog` hook into `~/.claude/`, and merges the hook into `settings.json` (backing up any existing file). Re-runs skip what's already there, and it never silently overwrites an existing `~/.claude/CLAUDE.md` — it tells you to merge by hand or pass `--force`.
+### 2. Choose the installer
 
-Then start `claude` (ideally inside tmux on an always-on host) and work normally. The activity log accumulates; run the workflows on Friday.
+Two paths. Pick with this rule:
 
-> Running full LifeOS on the work machine instead of vanilla Claude Code? Use `bootstrap-work-profile.ts` with a LifeOS archive — it installs the LifeOS work profile (identity files, memory dirs) on top of this kit.
+| Situation | Use | Why |
+|---|---|---|
+| Machine you fully control | `install.ts` | Copies files into `~/.claude/`, can install launchd jobs |
+| Corporate/MDM-managed machine | `install-lite.ts` | Additive only: no launchd, no `osascript`, no file clobbering |
+
+Check which you are on:
+
+```bash
+ls /Library/Managed\ Preferences/ 2>/dev/null
+```
+
+Non-empty output means the machine is MDM-managed — **use `install-lite.ts`**. When in doubt use lite: it is the strictly safer of the two and can be re-run over a full install.
+
+### 3a. Full install
+
+```bash
+bun tools/install.ts --dry-run     # preview; writes nothing
+bun tools/install.ts               # apply
+```
+
+Five steps, all idempotent — re-running skips whatever already exists:
+
+1. Creates `~/work/{worklog/eod,initiatives/org,initiatives/personal,reports}`
+2. Seeds `WORK_LEDGER.md` and `BRAG.md` into `$WORK_DIR` if absent
+3. Installs the work-profile `CLAUDE.md` into `~/.claude/`
+4. Installs `SessionActivityLog.hook.ts` into `~/.claude/hooks/`
+5. Merges the hook into `~/.claude/settings.json`, backing up to `settings.json.bak`
+
+**Expected output** ends with `--- Install complete ---` and a `Next steps` block.
+
+**If step 3 reports it skipped `CLAUDE.md`:** you already have one. It will not be overwritten silently. Either merge this repo's `CLAUDE.md` into yours by hand, or re-run with `--force` (which backs up first). Do not use `--force` on a machine where your org supplies `~/.claude/CLAUDE.md`.
+
+Relocate the work directory with `WORK_DIR=/path/to/work bun tools/install.ts`.
+
+### 3b. Lite install (managed machines)
+
+```bash
+bun tools/install-lite.ts --dry-run
+bun tools/install-lite.ts
+```
+
+Same five-step shape, but additive throughout:
+
+1. Ensures the same `$WORK_DIR` directories
+2. Seeds `WORK_LEDGER.md` and `BRAG.md` if absent
+3. **Merges** hooks into `~/.claude/settings.json`, preserving every unrelated key, and adds scoped permissions (`Bash(git *)`, `Bash(bun *)`) plus a deny list — never a blanket `Bash` allow
+4. **Appends** an `@<repo>/CLAUDE.md` import to `~/.claude/CLAUDE.md`, never overwriting it
+5. Symlinks `skills/` into `~/.claude/skills/` — referenced, never copied
+
+Hooks are wired at their repo path with an absolute bun binary, so the repo stays the source of truth and hooks resolve under Claude Code's minimal PATH.
+
+**Never run `schedule.ts` on a managed machine.** It installs launchd jobs and fires `osascript`, both governed by MDM policy, and `osascript` is in the deny list this installer writes.
+
+### 4. Restart Claude Code
+
+Hooks and skills load at startup. **A restart is required** — no command re-reads them. Until you restart, activity capture is not running.
+
+### 5. Verify
+
+```bash
+bun tools/install-lite.ts --check     # exit 0 = wiring intact, 1 = drifted
+```
+
+Checks settings.json parses, both hooks point at this repo, the `CLAUDE.md` import is present, and `worklog/activity.jsonl` has been written recently. Safe to run any time; it writes nothing.
+
+After one Claude Code session, confirm capture is live:
+
+```bash
+test -s ~/work/worklog/activity.jsonl && echo "capture working"
+```
+
+Empty or missing after a session means the hook is not firing. Re-run `--check`, then re-run the installer — it is idempotent, so re-running is always safe.
+
+> **On enterprise-managed Claude, expect this wiring to be undone.** Enterprise Claude has been observed rewriting `~/.claude/settings.json`, dropping the merged hooks with no error: the file stays valid and capture silently stops. Re-running the installer restores it. Worth a periodic `--check`, or whenever a session brief looks empty.
+
+### 6. Post-install configuration
+
+Two files are deliberately not in the repo and must be created by hand. Both are gitignored, and `bun tools/verify-clean.ts` fails if either leaks in.
+
+```bash
+cp templates/company-template.md company.md    # employer-specific context
+```
+
+Fill in `company.md` with your org's prioritisation filter, ticket-system name, and team conventions. `CLAUDE.md` references it for the initiative registry scoring.
+
+```bash
+cp templates/containment-patterns-work.json templates/containment-patterns-work.local.json
+```
+
+Replace the placeholder strings in the `.local.json` with the real identity strings you want kept out of work output. The committed `.json` holds examples only.
+
+### 7. Confirm the whole thing
+
+```bash
+bun test                        # 0 fail
+bun run typecheck               # 0 errors
+bun tools/verify-clean.ts       # no identity/employer strings in tracked files
+bun tools/serve.ts              # dashboard at http://localhost:3141, Ctrl-C to stop
+```
+
+On a work machine, `bun tools/verify-isolation.ts` additionally checks that no personal-assistant content reached the work profile. It exits 2 if `~/.claude` is not a work profile at all — that is the expected result on a personal machine, not a failure.
+
+> Running full LifeOS on the work machine instead of vanilla Claude Code? On the personal machine run `bun tools/build-work-archive.ts` to package a work-safe profile, then on the work machine run `bun tools/bootstrap-work-profile.ts <archive.tar.gz>` to unpack it over this kit (identity files, memory dirs). `--skip-archive` scaffolds the directory structure without an archive.
 
 ## Report engine
 
@@ -111,8 +227,6 @@ All report tools accept `--out <file>` to write to a file (must resolve under `W
 Run `bun tools/EodSummary.ts --save` at end of day. The tool writes a draft to `$WORK_DIR/worklog/eod/<date>.md` — edit the saved file in your own words before close of business. Those human-authored `done:`, `decided:`, and `blocked:` lines become the headline of Friday's weekly report; commit activity demotes to an **Evidence** appendix underneath. The tool refuses to overwrite an existing file (human edits are sacred).
 
 ### Skills
-
-> **On enterprise-managed Claude, expect the wiring to be undone.** `install-lite.ts` merges its hooks into `~/.claude/settings.json`. Enterprise Claude has been observed rewriting that file, dropping the merged hooks without any error — the file stays valid, and activity capture silently stops. Check with `bun tools/install-lite.ts --check` (exit 0 = intact, 1 = drifted); re-running the installer restores it, and the install is idempotent so re-running is always safe. Worth checking whenever a session brief looks empty, or on a calendar reminder.
 
 Skills in `skills/` are symlinked into `~/.claude/skills/` by `install-lite.ts` (referenced, never copied — the repo stays source of truth). A pre-existing non-symlink skill of the same name is left untouched.
 
