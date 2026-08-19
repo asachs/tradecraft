@@ -57,7 +57,7 @@ tradecraft/
 │   └── settings-snippet.json      Wiring merged into ~/.claude/settings.json
 │
 ├── skills/eod/SKILL.md          /eod — wraps the end-of-day loop
-├── tests/                       235 tests, mirroring tools/ and hooks/
+├── tests/                       Mirrors tools/ and hooks/, one suite per module
 └── Plans/                       Dated records of past work (history, not live docs)
 ```
 
@@ -216,7 +216,7 @@ These tools **draft** to stdout or local files. You review, edit, and send — n
 
 ```bash
 bun install     # dev dependencies for the typecheck (first time only)
-bun test        # 192 tests
+bun test
 bun run typecheck   # tsc --noEmit, strict
 ```
 
