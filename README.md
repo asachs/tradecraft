@@ -161,7 +161,7 @@ Hooks and skills load at startup. **A restart is required** — no command re-re
 bun tools/install-lite.ts --check     # exit 0 = wiring intact, 1 = drifted
 ```
 
-Checks settings.json parses, both hooks point at this repo, the `CLAUDE.md` import is present, and `worklog/activity.jsonl` has been written recently. Safe to run any time; it writes nothing.
+Checks settings.json parses, both hooks point at this repo, the `CLAUDE.md` import is present, and `worklog/activity.jsonl` is being written. Expect exit 0 immediately after installing: an activity log that does not exist yet is reported as pending, not drift, until the wiring is older than a week. Safe to run any time; it writes nothing.
 
 After one Claude Code session, confirm capture is live:
 
@@ -198,7 +198,7 @@ bun tools/verify-clean.ts       # no identity/employer strings in tracked files
 bun tools/serve.ts              # dashboard at http://localhost:3141, Ctrl-C to stop
 ```
 
-On a work machine, `bun tools/verify-isolation.ts` additionally checks that no personal-assistant content reached the work profile. It exits 2 if `~/.claude` is not a work profile at all — that is the expected result on a personal machine, not a failure.
+`bun tools/verify-isolation.ts` additionally checks that no personal-assistant content reached the work profile: forbidden directories and files, config patterns, and non-whitelisted hooks and skills. After a clean install it exits 0 with 26 checks and no failures. On a machine with no work profile installed it exits 2 and explains why, rather than reporting an entire personal setup as unexpected; `--force` audits anyway.
 
 > Running full LifeOS on the work machine instead of vanilla Claude Code? On the personal machine run `bun tools/build-work-archive.ts` to package a work-safe profile, then on the work machine run `bun tools/bootstrap-work-profile.ts <archive.tar.gz>` to unpack it over this kit (identity files, memory dirs). `--skip-archive` scaffolds the directory structure without an archive.
 

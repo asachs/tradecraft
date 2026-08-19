@@ -110,6 +110,7 @@ const ALLOWED_HOOKS = [
 ];
 
 const ALLOWED_SKILLS = [
+  "eod", // shipped by this repo, symlinked by install-lite.ts
   "ISA",
   "Research",
   "Fabric",
@@ -166,9 +167,30 @@ for (const file of FORBIDDEN_FILES) {
 }
 
 // Check 2: Scan config files for forbidden patterns
+
+/**
+ * Config text with `permissions.deny` removed.
+ *
+ * The lite installer writes a deny list naming the tools it blocks
+ * (elevenlabs, telegram, t.me). Scanning the raw file reads those as evidence
+ * the tools are present, so a correct install fails its own leak check. A deny
+ * entry is the opposite of a leak.
+ */
+function scannableConfig(filePath: string, raw: string): string {
+  if (!filePath.endsWith("settings.json")) return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    const perms = parsed?.permissions;
+    if (perms && typeof perms === "object") delete (perms as Record<string, unknown>).deny;
+    return JSON.stringify(parsed);
+  } catch {
+    return raw;
+  }
+}
+
 function scanFile(filePath: string): string[] {
   try {
-    const content = readFileSync(filePath, "utf-8");
+    const content = scannableConfig(filePath, readFileSync(filePath, "utf-8"));
     const hits: string[] = [];
     for (const pattern of FORBIDDEN_PATTERNS) {
       if (pattern.test(content)) {
@@ -245,7 +267,7 @@ if (existsSync(skillsDir)) {
 // Check 5: settings.json doesn't reference disabled services
 const settingsPath = join(CLAUDE_DIR, "settings.json");
 if (existsSync(settingsPath)) {
-  const settingsContent = readFileSync(settingsPath, "utf-8");
+  const settingsContent = scannableConfig(settingsPath, readFileSync(settingsPath, "utf-8"));
   const hasVoice = /elevenlabs|tts|voice.*synth/i.test(settingsContent);
   const hasTelegram = /telegram|t\.me/i.test(settingsContent);
   const hasPulse = /pulse.*url|pulse.*endpoint/i.test(settingsContent);

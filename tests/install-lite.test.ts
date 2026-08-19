@@ -275,13 +275,30 @@ describe("checkLiteInstall", () => {
     expect(log.detail).toContain("may have been unwired");
   });
 
-  test("flags an activity log that never appeared", () => {
+  test("treats a not-yet-written activity log as pending right after install", () => {
+    // Following the documented install steps runs --check before any session
+    // has happened. Reporting drift there would say a correct install failed.
     const claudeDir = tmp("tc-claude-");
     const workDir = tmp("tc-work-");
     runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
 
     const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir });
-    expect(byName(checks, "activity log").detail).toContain("never fired");
+    const log = byName(checks, "activity log");
+    expect(log.ok).toBe(true);
+    expect(log.detail).toContain("not written yet");
+    expect(checks.every((c) => c.ok)).toBe(true);
+  });
+
+  test("flags an activity log that never appeared long after install", () => {
+    const claudeDir = tmp("tc-claude-");
+    const workDir = tmp("tc-work-");
+    runInstallLite({ scaffoldDir: SCAFFOLD, claudeDir, workDir, force: false, dryRun: false, log: quiet });
+    const future = new Date(Date.now() + 30 * 86_400_000);
+
+    const checks = checkLiteInstall({ scaffoldDir: SCAFFOLD, claudeDir, workDir, now: future });
+    const log = byName(checks, "activity log");
+    expect(log.ok).toBe(false);
+    expect(log.detail).toContain("never fired");
   });
 
   test("writes nothing", () => {

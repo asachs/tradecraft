@@ -246,4 +246,41 @@ describe("verify-isolation", () => {
     expect(stdout).toContain("25 unexpected:");
     expect(stdout).toContain("and 15 more");
   });
+  test("a lite install passes its own isolation check", () => {
+    // Regression: install-lite writes permissions.deny naming elevenlabs,
+    // telegram, and t.me. Scanning the raw file read those as leaks, so a
+    // correct install failed 4 of 26 checks with nothing personal present.
+    const home = join(tmpDir, "lite");
+    mkdirSync(join(home, ".claude", "LIFEOS", "USER"), { recursive: true });
+    writeFileSync(join(home, ".claude", "CLAUDE.md"), "# LifeOS Work Profile\n");
+    writeFileSync(
+      join(home, ".claude", "settings.json"),
+      JSON.stringify({
+        permissions: {
+          allow: ["Bash(git *)", "Bash(bun *)"],
+          deny: ["Bash(*elevenlabs*)", "Bash(*telegram*)", "Bash(*t.me/*)", "Bash(osascript *)"],
+        },
+      })
+    );
+    mkdirSync(join(home, ".claude", "skills", "eod"), { recursive: true });
+    writeFileSync(join(home, ".claude", "skills", "eod", "SKILL.md"), "# eod");
+
+    const { stdout, exitCode } = runVerify(home);
+    expect(stdout).toContain("0 failures");
+    expect(exitCode).toBe(0);
+  });
+
+  test("still catches those services when they are actually configured", () => {
+    const home = join(tmpDir, "leaky");
+    mkdirSync(join(home, ".claude", "LIFEOS", "USER"), { recursive: true });
+    writeFileSync(join(home, ".claude", "CLAUDE.md"), "# LifeOS Work Profile\n");
+    writeFileSync(
+      join(home, ".claude", "settings.json"),
+      JSON.stringify({ env: { ELEVENLABS_API_KEY: "sk-x" }, permissions: { deny: [] } })
+    );
+
+    const { stdout, exitCode } = runVerify(home);
+    expect(exitCode).toBe(1);
+    expect(stdout).toContain("FAIL");
+  });
 });

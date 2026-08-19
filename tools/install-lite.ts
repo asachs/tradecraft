@@ -222,7 +222,24 @@ export function checkLiteInstall(opts: {
   // clobber regardless of cause, including one that leaves settings.json valid.
   const activity = join(workDir, "worklog", "activity.jsonl");
   if (!existsSync(activity)) {
-    add("activity log", false, `no ${activity} yet — the Stop hook has never fired`);
+    // Right after an install no session has run yet, so an absent log is
+    // pending, not drift — reporting failure here would tell someone following
+    // the install steps that a correct install had failed. Age the wiring by
+    // settings.json to tell "not yet" apart from "stopped happening".
+    let wiringAgeDays = Infinity;
+    try {
+      wiringAgeDays = (now.getTime() - statSync(settingsPath).mtime.getTime()) / 86_400_000;
+    } catch {
+      /* no settings.json — the checks above already report that */
+    }
+    const pending = wiringAgeDays <= staleDays;
+    add(
+      "activity log",
+      pending,
+      pending
+        ? "not written yet — expected until the first Claude Code session after install"
+        : `no ${activity}, and the wiring is ${Math.floor(wiringAgeDays)}d old — the Stop hook has never fired`
+    );
   } else {
     const ageDays = (now.getTime() - statSync(activity).mtime.getTime()) / 86_400_000;
     const fresh = ageDays <= staleDays;
