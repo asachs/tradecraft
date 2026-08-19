@@ -8,12 +8,62 @@ Portable Claude Code working patterns for a corporate environment. **Patterns on
 
 ## What this is
 
-A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM:
+A starter kit for running a disciplined Claude Code work brain on a corporate laptop or VM.
 
-- **CLAUDE.md** — work-profile instructions: operational rules, the review conventions, capture conventions
-- **templates/** — ISA (definition-of-done), execution plan, worklog, decision log, initiative registry, promise ledger, brag document
-- **workflows/** — prompts for the start-of-day check, end-of-day summary, Monday planning, and the weekly report
-- **hooks/** — session activity logging (auto-accumulates "what was done, where") + settings snippet
+### Repository layout
+
+```
+tradecraft/
+├── CLAUDE.md                    Work-profile instructions Claude Code loads: operational
+│                                  rules, sharing bar, daily cadence, initiative conventions
+├── CONCEPTS.md                  Why the pieces exist — read this first
+├── ISA.md                       This repo's own definition of done (the worked example)
+│
+├── templates/                   Starting points, copied into $WORK_DIR
+│   ├── ISA.md                     Definition of done, per initiative
+│   ├── PLAN.md                    Execution plan, written when work starts moving
+│   ├── WORKLOG.md                 Method/provenance log for multi-session work
+│   ├── DECISIONS.md               Decision log
+│   ├── REGISTRY.md                Portfolio scored against the prioritisation filter
+│   ├── WORK_LEDGER.md             Promise ledger
+│   ├── BRAG.md                    Dated, evidence-linked accomplishments
+│   ├── company-template.md        Scaffold for your gitignored company.md
+│   └── work-claude.md             CLAUDE.md for a full LifeOS work profile
+│
+├── workflows/                   Prompts you invoke by name
+│   ├── StartOfDay.md              Calendar, daily note, meeting stubs
+│   ├── EodSummary.md              End-of-day one-liners to review
+│   ├── MondayPlanning.md          Week plan from promises and initiatives
+│   └── WeeklyReport.md            Manager-ready weekly draft
+│
+├── tools/                       Deterministic CLIs — no LLM calls, no network
+│   ├── EodSummary.ts  WeeklyReport.ts  DailyBrief.ts  MondayPlan.ts
+│   ├── BragHarvest.ts  Reconcile.ts                   Report generators
+│   ├── serve.ts                   Localhost dashboard over the work record
+│   ├── schedule.ts                launchd delivery (skipped on managed machines)
+│   ├── install.ts                 Full install
+│   ├── install-lite.ts            Additive, MDM-safe install (+ --check)
+│   ├── build-work-archive.ts      Package a work-safe profile on the personal machine
+│   ├── bootstrap-work-profile.ts  Unpack it on the work machine
+│   ├── verify-clean.ts            Fail if identity/employer strings reach the repo
+│   ├── verify-isolation.ts        Fail if personal content reaches the work profile
+│   ├── archive-work.sh            Weekly tarball snapshots of the work notes
+│   └── lib/                       Shared: activity, ledger, dates, eod, initiatives,
+│                                    config, links, markdown
+│
+├── hooks/                       Passive capture
+│   ├── SessionActivityLog.hook.ts Records what was done and where, per session
+│   ├── WorkBrief.hook.ts          SessionStart brief: overdue promises, EOD state
+│   └── settings-snippet.json      Wiring merged into ~/.claude/settings.json
+│
+├── skills/eod/SKILL.md          /eod — wraps the end-of-day loop
+├── tests/                       235 tests, mirroring tools/ and hooks/
+└── Plans/                       Dated records of past work (history, not live docs)
+```
+
+Not in the repo and never committed: `company.md` (employer-specific context) and
+`*.local.json` (real containment patterns). Both are gitignored, and
+`bun tools/verify-clean.ts` fails the build if either leaks in.
 
 ## Core principles
 
@@ -74,12 +124,42 @@ Tag any EOD line with a trailing `[BRAG?]` while editing your saved EOD file. On
 
 ### Configuration
 
-Set `WORK_DIR` to point at your work directory (default: `~/work`). The tools read:
+Set `WORK_DIR` to point at your work directory (default: `~/work`). This is where your
+actual record lives — separate from this repo, and private:
 
-- `$WORK_DIR/worklog/activity.jsonl` — session activity captured by the hook
-- `$WORK_DIR/WORK_LEDGER.md` — promise ledger (markdown table)
-- `$WORK_DIR/initiatives/{org,personal}/` — initiative directories, split by provenance: `org/` for formally-assigned work, `personal/` for self-found work (read by MondayPlan and Reconcile)
-- `$WORK_DIR/repos.json` — optional map of repo basename → web base URL (e.g. `{"my-repo": "https://github.com/org/my-repo"}`). When present, WeeklyReport renders commit ids as clickable `<base>/commit/<sha>` links; otherwise ids stay bare text.
+```
+~/work/
+├── WORK_LEDGER.md               Promises made — owner, due date, status
+├── BRAG.md                      Dated, evidence-linked accomplishments
+├── repos.json                   Optional: repo basename → web base URL
+│
+├── initiatives/
+│   ├── REGISTRY.md                Portfolio scored against the prioritisation filter
+│   ├── org/                       Formally-assigned work
+│   │   └── api-gateway/
+│   │       ├── ISA.md               Definition of done — always, first
+│   │       ├── PLAN.md              Execution plan — when work starts moving
+│   │       ├── WORKLOG.md           Method/provenance — for multi-session work
+│   │       ├── DECISIONS.md         Decisions, logged as made
+│   │       └── briefs/              This initiative's own evidence
+│   └── personal/                  Self-found work, carrying candidate_org
+│       └── flaky-test-hunt/
+│           └── ISA.md
+│
+├── worklog/
+│   ├── activity.jsonl             Session activity, written by the hook
+│   └── eod/2026-08-19.md          Daily EOD drafts you edit in your own words
+│
+├── meetings/                    Who you met, what came of it
+├── observations/                Captured as noticed
+├── briefs/                      Evidence spanning initiatives
+└── reports/                     Generated: weekly-report/, daily-brief/, monday-plan/
+```
+
+`repos.json` maps repo basename → web base URL (e.g. `{"my-repo": "https://github.com/org/my-repo"}`).
+When present, WeeklyReport renders commit ids as clickable `<base>/commit/<sha>` links; otherwise
+ids stay bare text. Everything else is created on demand — `bun tools/install.ts` scaffolds the
+directories, and the rest appear as you use them.
 
 ### Scheduled delivery
 
