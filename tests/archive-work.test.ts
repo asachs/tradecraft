@@ -9,6 +9,23 @@ let repoDir: string;
 let localArchive: string;
 let remoteArchive: string;
 
+/**
+ * Git env that ignores the developer's global and system config.
+ *
+ * Without this the fixture inherits whatever the machine has set — commit
+ * signing being the one that bites, since a locked agent fails the commit and
+ * takes every test in this file down with it.
+ */
+const GIT_ENV = {
+  ...process.env,
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_SYSTEM: "/dev/null",
+  GIT_AUTHOR_NAME: "t",
+  GIT_AUTHOR_EMAIL: "t@example.com",
+  GIT_COMMITTER_NAME: "t",
+  GIT_COMMITTER_EMAIL: "t@example.com",
+};
+
 /** Create a one-commit git repo to archive. */
 function makeRepo(dir: string) {
   mkdirSync(dir, { recursive: true });
@@ -16,10 +33,12 @@ function makeRepo(dir: string) {
   for (const cmd of [
     ["git", "init", "-q"],
     ["git", "add", "-A"],
-    ["git", "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-qm", "init"],
+    ["git", "-c", "commit.gpgsign=false", "commit", "-qm", "init"],
   ]) {
-    const r = Bun.spawnSync({ cmd, cwd: dir, stdout: "pipe", stderr: "pipe" });
-    if (r.exitCode !== 0) throw new Error(`setup failed: ${cmd.join(" ")}`);
+    const r = Bun.spawnSync({ cmd, cwd: dir, env: GIT_ENV, stdout: "pipe", stderr: "pipe" });
+    if (r.exitCode !== 0) {
+      throw new Error(`setup failed: ${cmd.join(" ")}\n${r.stderr.toString()}`);
+    }
   }
 }
 
@@ -27,6 +46,7 @@ function headSha(): string {
   return Bun.spawnSync({
     cmd: ["git", "rev-parse", "--short", "HEAD"],
     cwd: repoDir,
+    env: GIT_ENV,
     stdout: "pipe",
   })
     .stdout.toString()
@@ -37,7 +57,7 @@ function runArchive(env: Record<string, string> = {}) {
   const result = Bun.spawnSync({
     cmd: ["bash", script],
     env: {
-      ...process.env,
+      ...GIT_ENV,
       WORK_DIR: repoDir,
       WORK_ARCHIVE_DIR: localArchive,
       ...env,
