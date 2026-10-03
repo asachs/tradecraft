@@ -416,4 +416,5 @@ if (import.meta.main) {
   console.log("  1. Restart Claude Code so the SessionStart brief + activity hook load, and skills register.");
   console.log("  2. Work normally — the brief surfaces overdue/EOD state each session; type /eod to wrap up.");
   console.log("  3. Run report tools on demand (see README); schedule.ts stays uninstalled here.");
+  console.log("  4. Run `bun tools/setup-identity.ts` once: your name, handles and employers, kept in a gitignored file.");
 }
