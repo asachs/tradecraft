@@ -45,6 +45,7 @@ tradecraft/
 │   ├── install-lite.ts            Additive, MDM-safe install (+ --check)
 │   ├── build-work-archive.ts      Package a work-safe profile on the personal machine
 │   ├── bootstrap-work-profile.ts  Unpack it on the work machine
+│   ├── setup-identity.ts          One-time: your identity strings, written to a gitignored file
 │   ├── verify-clean.ts            Fail if identity/employer strings reach the repo
 │   ├── verify-isolation.ts        Fail if personal content reaches the work profile
 │   ├── archive-work.sh            Weekly tarball snapshots of the work notes
@@ -175,7 +176,23 @@ Empty or missing after a session means the hook is not firing. Re-run `--check`,
 
 ### 6. Post-install configuration
 
-Two files are deliberately not in the repo and must be created by hand. Both are gitignored, and `bun tools/verify-clean.ts` fails if either leaks in.
+Two things are deliberately not in the repo. Both are gitignored, and `bun tools/verify-clean.ts` fails the build if either leaks in.
+
+**Your identity strings.** Run the setup step and answer five short questions (names, handles, email domains, employers, personal hostnames and codenames). Answers are written to `templates/containment-patterns-work.local.json` and nowhere else:
+
+```bash
+bun tools/setup-identity.ts                 # interactive
+bun tools/setup-identity.ts --show          # review, masked
+bun tools/setup-identity.ts --add "..."     # scripted, for an agent-driven install
+```
+
+Two tools read that file: `verify-clean.ts` keeps the strings out of this repo, and `build-work-archive.ts` compiles them into the containment guard for the work profile. The tool itself ships with no personal patterns, only generic path shapes, so a fresh clone cannot reveal who authored it. On the machine where you edit this repo, run the strict form so a missing file is an error rather than a notice:
+
+```bash
+bun tools/verify-clean.ts --require-local
+```
+
+**Employer context.**
 
 ```bash
 cp templates/company-template.md company.md    # employer-specific context
@@ -183,18 +200,12 @@ cp templates/company-template.md company.md    # employer-specific context
 
 Fill in `company.md` with your org's prioritisation filter, ticket-system name, and team conventions. `CLAUDE.md` references it for the initiative registry scoring.
 
-```bash
-cp templates/containment-patterns-work.json templates/containment-patterns-work.local.json
-```
-
-Replace the placeholder strings in the `.local.json` with the real identity strings you want kept out of work output. The committed `.json` holds examples only.
-
 ### 7. Confirm the whole thing
 
 ```bash
 bun test                        # 0 fail
 bun run typecheck               # 0 errors
-bun tools/verify-clean.ts       # no identity/employer strings in tracked files
+bun tools/verify-clean.ts       # no identity/employer strings in tracked files (--require-local on your authoring machine)
 bun tools/serve.ts              # dashboard at http://localhost:3141, Ctrl-C to stop
 ```
 
