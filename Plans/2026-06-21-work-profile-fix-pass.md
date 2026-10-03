@@ -1,4 +1,6 @@
-# PAI Work Profile — Fix Pass Plan
+# Work Profile — Fix Pass Plan (June 2026)
+
+> Historical record. "PAI" below is the former name of LifeOS; paths and names are as they were at the time.
 
 > Replaces the original plan. Fixes the 13 issues from critical review of Ultraplan delivery.
 

@@ -20,6 +20,7 @@ import { resolve, join } from "node:path";
 /** Identity/employer substrings (case-insensitive) that must not ship. */
 export const FORBIDDEN: readonly string[] = [
   "former-employer",
+  "owner",
   "former-employer-2",
   "owner",
   "owner",
