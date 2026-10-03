@@ -45,7 +45,7 @@ tradecraft/
 │   ├── install-lite.ts            Additive, MDM-safe install (+ --check)
 │   ├── build-work-archive.ts      Package a work-safe profile on the personal machine
 │   ├── bootstrap-work-profile.ts  Unpack it on the work machine
-│   ├── setup-identity.ts          One-time: your identity strings, written to a gitignored file
+│   ├── setup-identity.ts          One-time: your identity strings, written to two gitignored files
 │   ├── verify-clean.ts            Fail if identity/employer strings reach the repo
 │   ├── verify-isolation.ts        Fail if personal content reaches the work profile
 │   ├── archive-work.sh            Weekly tarball snapshots of the work notes
@@ -176,17 +176,24 @@ Empty or missing after a session means the hook is not firing. Re-run `--check`,
 
 ### 6. Post-install configuration
 
-Two things are deliberately not in the repo. Both are gitignored, and `bun tools/verify-clean.ts` fails the build if either leaks in.
+Three files are deliberately not in the repo. All are gitignored (`*.local.json`, `company.md`), and `bun tools/verify-clean.ts` fails the build if any leaks in.
 
-**Your identity strings.** Run the setup step and answer five short questions (names, handles, email domains, employers, personal hostnames and codenames). Answers are written to `templates/containment-patterns-work.local.json` and nowhere else:
+**Your identity strings.** Run the setup step and answer five short questions. It writes two gitignored files under `templates/`, and nothing anywhere else:
+
+| File | Holds | Read by |
+|---|---|---|
+| `repo-forbidden.local.json` | names, handles, email, employers | `verify-clean.ts`, to keep them out of this repo |
+| `containment-patterns-work.local.json` | the same, plus personal hosts, codenames, services and ports | `build-work-archive.ts`, for the work-profile guard |
+
+They differ on purpose: the repo names services and ports in its own deny lists, so those belong in containment but would make the repo check fail on its own content. For the same reason, do not list a vendor whose product the kit itself names (a calendar provider, say) as an employer; the setup step checks each repo string against the tracked files and asks before keeping one the repo already contains.
 
 ```bash
-bun tools/setup-identity.ts                 # interactive
-bun tools/setup-identity.ts --show          # review, masked
-bun tools/setup-identity.ts --add "..."     # scripted, for an agent-driven install
+bun tools/setup-identity.ts                 # interactive, with the collision check
+bun tools/setup-identity.ts --show          # review both files, masked
+bun tools/setup-identity.ts --add "..." [--containment-only "..."]   # scripted
 ```
 
-Two tools read that file: `verify-clean.ts` keeps the strings out of this repo, and `build-work-archive.ts` compiles them into the containment guard for the work profile. The tool itself ships with no personal patterns, only generic path shapes, so a fresh clone cannot reveal who authored it. On the machine where you edit this repo, run the strict form so a missing file is an error rather than a notice:
+The tool itself ships with no personal patterns, only a generic path shape, so a fresh clone cannot reveal who authored it. On the machine where you edit this repo, run the strict form so a missing file is an error rather than a notice:
 
 ```bash
 bun tools/verify-clean.ts --require-local

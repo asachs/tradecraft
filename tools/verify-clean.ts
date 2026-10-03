@@ -9,9 +9,13 @@
  *
  * Pattern sources, combined:
  *   1. GENERIC — shapes that leak regardless of who you are (macOS home paths).
- *   2. templates/containment-patterns-work.local.json — your real strings,
- *      gitignored, created by `bun tools/setup-identity.ts`. The committed
- *      containment-patterns-work.json holds placeholders and is never used here.
+ *   2. templates/repo-forbidden.local.json — your names, handles, email
+ *      addresses and employers, gitignored, created by `bun tools/setup-identity.ts`.
+ *
+ * This is deliberately NOT the containment file (containment-patterns-work.local.json):
+ * that one feeds the work-profile guard and legitimately lists services and ports
+ * the repo itself names in its deny lists. Mixing the two makes the repo fail on
+ * its own content.
  *
  * Without the local file the check runs on GENERIC only, says so, and exits 0,
  * so a fresh clone still passes `bun test`. Pass --require-local to make a
@@ -28,11 +32,7 @@ const SCAFFOLD_DIR = resolve(join(import.meta.dir, ".."));
 export const GENERIC: readonly string[] = ["/Users/"];
 
 /** Where the user's own strings live. Gitignored (*.local.json). */
-export const LOCAL_PATTERNS_PATH = join(
-  SCAFFOLD_DIR,
-  "templates",
-  "containment-patterns-work.local.json",
-);
+export const LOCAL_PATTERNS_PATH = join(SCAFFOLD_DIR, "templates", "repo-forbidden.local.json");
 
 /** Files that legitimately mention the mechanism (they define or exercise it). */
 const SELF_EXCLUDE = new Set(["tools/verify-clean.ts", "tests/verify-clean.test.ts"]);
@@ -99,7 +99,7 @@ if (import.meta.main) {
   if (local.length === 0) {
     const msg =
       "verify-clean: no personal patterns configured — scanning generic patterns only. " +
-      "Run `bun tools/setup-identity.ts` to add your name, handles and employers (gitignored).";
+      "Run `bun tools/setup-identity.ts` to record your names, handles, email and employers (gitignored).";
     if (requireLocal) {
       console.error(msg);
       process.exit(1);
