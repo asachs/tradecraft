@@ -2,39 +2,58 @@
 /**
  * verify-clean.ts — repo-wide person/employer-agnostic check (ISC-35).
  *
- * Scans every git-tracked file for identity/employer strings that must never
- * ship in this patterns-only methodology repo. This file is the single source
- * of truth for the forbidden patterns; ISA ISC-35 references it.
+ * Scans every git-tracked file for strings that must never ship in this
+ * patterns-only methodology repo. The strings themselves are personal by
+ * nature (your name, handles, employers), so they do NOT live in this file:
+ * committing them here would publish the very things the check protects.
  *
- * Scope is the whole repo, not just tools/ + tests/ — the narrow original scope
- * is exactly why personal data once sat undetected in templates/. Two files are
- * excluded because they necessarily contain the patterns (they define/test them).
- * git ls-files lists tracked files only, so a real, gitignored
- * containment-patterns-work.local.json is never scanned.
+ * Pattern sources, combined:
+ *   1. GENERIC — shapes that leak regardless of who you are (macOS home paths).
+ *   2. templates/containment-patterns-work.local.json — your real strings,
+ *      gitignored, created by `bun tools/setup-identity.ts`. The committed
+ *      containment-patterns-work.json holds placeholders and is never used here.
  *
- * Usage: bun tools/verify-clean.ts        # exit 0 = clean, 1 = leaks found
+ * Without the local file the check runs on GENERIC only, says so, and exits 0,
+ * so a fresh clone still passes `bun test`. Pass --require-local to make a
+ * missing file a failure (use this on the machine where you author the repo).
+ *
+ * Usage: bun tools/verify-clean.ts [--require-local]   # exit 0 = clean, 1 = leaks
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve, join } from "node:path";
-
-/** Identity/employer substrings (case-insensitive) that must not ship. */
-export const FORBIDDEN: readonly string[] = [
-  "former-employer",
-  "former-employer-2",
-  "owner",
-  "owner",
-  "/Users/",
-];
 
 const SCAFFOLD_DIR = resolve(join(import.meta.dir, ".."));
 
-/** Files that legitimately contain the patterns (they define or exercise them). */
+/** Patterns that are leaks for anyone (case-insensitive substrings). */
+export const GENERIC: readonly string[] = ["/Users/"];
+
+/** Where the user's own strings live. Gitignored (*.local.json). */
+export const LOCAL_PATTERNS_PATH = join(
+  SCAFFOLD_DIR,
+  "templates",
+  "containment-patterns-work.local.json",
+);
+
+/** Files that legitimately mention the mechanism (they define or exercise it). */
 const SELF_EXCLUDE = new Set(["tools/verify-clean.ts", "tests/verify-clean.test.ts"]);
 
 export interface Offender {
   file: string;
   line: number;
   pattern: string;
+}
+
+/**
+ * Read the user's patterns from a JSON array file. Missing file → []. A file
+ * that is not a JSON array of non-empty strings is an error, not a silent pass.
+ */
+export function loadLocalPatterns(path: string = LOCAL_PATTERNS_PATH): string[] {
+  if (!existsSync(path)) return [];
+  const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));
+  if (!Array.isArray(parsed) || !parsed.every((p) => typeof p === "string")) {
+    throw new Error(`${path}: expected a JSON array of strings`);
+  }
+  return (parsed as string[]).map((p) => p.trim()).filter((p) => p.length > 0);
 }
 
 /** Find forbidden patterns (case-insensitive) across the given repo-relative files. */
@@ -75,19 +94,33 @@ export function trackedFiles(scaffoldDir: string = SCAFFOLD_DIR): string[] {
 }
 
 if (import.meta.main) {
+  const requireLocal = process.argv.includes("--require-local");
+  const local = loadLocalPatterns();
+  if (local.length === 0) {
+    const msg =
+      "verify-clean: no personal patterns configured — scanning generic patterns only. " +
+      "Run `bun tools/setup-identity.ts` to add your name, handles and employers (gitignored).";
+    if (requireLocal) {
+      console.error(msg);
+      process.exit(1);
+    }
+    console.error(msg);
+  }
+  const patterns = [...GENERIC, ...local];
   const files = trackedFiles();
-  const offenders = findLeaks(files, FORBIDDEN, (rel) =>
+  const offenders = findLeaks(files, patterns, (rel) =>
     readFileSync(join(SCAFFOLD_DIR, rel), "utf-8"),
   );
   if (offenders.length === 0) {
     console.log(
-      `verify-clean: ${files.length} tracked files scanned — no identity/employer strings found.`,
+      `verify-clean: ${files.length} tracked files scanned against ${patterns.length} pattern(s) — clean.`,
     );
     process.exit(0);
   }
   console.error(`verify-clean: ${offenders.length} forbidden match(es) found:`);
   for (const o of offenders) {
-    console.error(`  ${o.file}:${o.line} — "${o.pattern}"`);
+    // Print the pattern masked: the report must not become the leak.
+    console.error(`  ${o.file}:${o.line} — pattern #${patterns.indexOf(o.pattern) + 1}`);
   }
   process.exit(1);
 }

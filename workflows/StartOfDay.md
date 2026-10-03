@@ -6,7 +6,7 @@ A 5-minute morning setup: check today's calendar, ensure the daily note exists w
 
 - Today's calendar — Microsoft 365 (Outlook). Use `outlook_calendar_search` (via ToolSearch) scoped to **today**.
 - `~/work/daily/` — daily notes (`YYYY-MM-DD.md`). Most recent file = carry-forward source.
-- `~/work/meetings/` — meeting notes. Conventions: **1:1s → per-person running file `owner_<Name>.md`** (standing `## Questions` list + newest-first dated `## YYYY-MM-DD` sections); **recurring standups → single rolling `<slug>.md`**; **one-off / group / external events → dated `YYYY-MM-DD-<slug>.md`**.
+- `~/work/meetings/` — meeting notes. Conventions: **1:1s → per-person running file `1on1_<Name>.md`** (standing `## Questions` list + newest-first dated `## YYYY-MM-DD` sections); **recurring standups → single rolling `<slug>.md`**; **one-off / group / external events → dated `YYYY-MM-DD-<slug>.md`**.
 - `~/work/SESSION-CONTEXT.md` — live work state (read first; blockers/onboarding numbering).
 - `~/work/WORK_LEDGER.md` — promises, for surfacing anything due today (the `WorkBrief` hook already prints overdue/due-today on session start).
 
@@ -24,7 +24,7 @@ A 5-minute morning setup: check today's calendar, ensure the daily note exists w
    - If the note already exists, leave it; just reconcile the Meetings pointers.
 
 4. **Stub / append meeting files.** For each substantive **internal** meeting on the calendar, use the right convention:
-   - **1:1 with a person** → the per-person running file `~/work/meetings/owner_<Name>.md`. If it exists, **prepend** a dated `## YYYY-MM-DD` section; if not, create it with a short standing context block + a `## Questions` list, then the dated section. Seed context from `SESSION-CONTEXT.md` / initiatives / prior notes when the person or topic is known.
+   - **1:1 with a person** → the per-person running file `~/work/meetings/1on1_<Name>.md`. If it exists, **prepend** a dated `## YYYY-MM-DD` section; if not, create it with a short standing context block + a `## Questions` list, then the dated section. Seed context from `SESSION-CONTEXT.md` / initiatives / prior notes when the person or topic is known.
    - **Recurring standup / status meeting** → a SINGLE rolling `~/work/meetings/<slug>.md`. Prepend a dated `## YYYY-MM-DD` section; create with a standing header (cadence, organizer, regulars) if absent.
    - **One-off / group / external event** → a dated `~/work/meetings/YYYY-MM-DD-<slug>.md` stub (Why / Agenda / Notes / Action items).
    - **Ask before creating** for ambiguous events: focus/hold blocks, all-day events, declined invites, or external-only meetings.

@@ -203,4 +203,5 @@ if (import.meta.main) {
   console.log("  1. Restart Claude Code so the activity hook loads.");
   console.log("  2. Work normally — activity accumulates in WORK_DIR/worklog/activity.jsonl.");
   console.log("  3. Run the report tools (see README) on your Friday cadence.");
+  console.log("  4. Run `bun tools/setup-identity.ts` once: your name, handles and employers, kept in a gitignored file.");
 }
